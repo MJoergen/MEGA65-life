@@ -1,12 +1,10 @@
 ; ****************************************************************************
-; YOUR-PROJECT-NAME (GITHUB-REPO-SHORTNAME) QNICE ROM
-;
 ; Main program that is used to build m2m-rom.rom by make-rom.sh.
-; The ROM is loaded by TODO-ADD-NAME-OF-VHDL-FILE-HERE.
+; The ROM is loaded by qnice.vhd
 ;
 ; The execution starts at the label START_FIRMWARE.
 ;
-; done by YOURNAME in YEAR and licensed under GPL v3
+; done by sy2002 in 2023 and licensed under GPL v3
 ; ****************************************************************************
 
 ; If the define RELEASE is defined, then the ROM will be a self-contained and
@@ -29,17 +27,13 @@
 ; called "Monitor" has been included and initialized
 #include "../../M2M/rom/main.asm"
 
-; Only include the Shell, if you want to use the pre-build core automation
-; and user experience. If you build your own, then remove this include and
-; also remove the include "shell_vars.asm" in the variables section below.
+; The MEGA65-life core uses the Shell of MiSTer2MEGA65
 #include "../../M2M/rom/shell.asm"
 
 ; ----------------------------------------------------------------------------
 ; Firmware: Main Code
 ; ----------------------------------------------------------------------------
 
-                ; Run the Shell: This is where you could put your own system
-                ; instead of the shell
 START_FIRMWARE  RBRA    START_SHELL, 1
 
 ; ----------------------------------------------------------------------------
@@ -74,13 +68,16 @@ SUBMENU_SUMMARY XOR     R8, R8                  ; R8 = 0 = no custom string
 ; Called by the file- and directory browser. Used to make sure that the 
 ; browser is only showing valid files and directories.
 ;
+;
 ; Input:
 ;   R8: Name of the file in capital letters
 ;   R9: 0=file, 1=directory
-;  R10: @TODO: Future release: Context (see CTX_* in sysdef.asm)
+;  R10: Context (CTX_* constants in sysdef.asm)
+;  R11: Menu group id (see config.vhd) of the menu item that is responsible
+;       for triggering FILTER_FILES
 ; Output:
 ;   R8: 0=do not filter file, i.e. show file
-FILTER_FILES    XOR     R8, R8                  ; R8 = 0 = do not filter file
+FILTER_FILES    XOR     R8, R8                  ; do not filter
                 RET
 
 ; PREP_LOAD_IMAGE callback function:
@@ -94,10 +91,12 @@ FILTER_FILES    XOR     R8, R8                  ; R8 = 0 = do not filter file
 ;
 ; Input:
 ;   R8: File handle: You are allowed to modify the read pointer of the handle
-;   R9: @TODO: Future release: Context (see CTX_* in sysdef.asm)
+;   R9: Context (CTX_* constants in sysdef.asm)
+;  R10: Menu group id (see config.vhd) of the menu item that is responsible
+;       for triggering PREP_LOAD_IMAGE
 ; Output:
 ;   R8: 0=OK, error code otherwise
-;   R9: image type if R8=0, otherwise 0 or optional ptr to  error msg string
+;   R9: image type if R8=0, otherwise 0 or optional ptr to error msg string
 PREP_LOAD_IMAGE XOR     R8, R8                  ; no errors
                 XOR     R9, R9                  ; image type hardcoded to 0
                 RET
@@ -117,10 +116,8 @@ PREP_LOAD_IMAGE XOR     R8, R8                  ; no errors
 ; Output:
 ;   R8: 0=OK, else pointer to string with error message
 ;   R9: 0=OK, else error code
-PREP_START      INCRB
-                XOR     R8, R8
+PREP_START      XOR     R8, R8
                 XOR     R9, R9
-                DECRB
                 RET
 
 ; OSM_SEL_POST callback function:
@@ -144,10 +141,8 @@ PREP_START      INCRB
 ; Output:
 ;   R8: 0=OK, else pointer to string with error message
 ;   R9: 0=OK, else error code
-OSM_SEL_POST    INCRB
-                XOR     R8, R8
+OSM_SEL_POST    XOR     R8, R8
                 XOR     R9, R9
-                DECRB
                 RET
 
 ; OSM_SEL_PRE callback function:
@@ -155,10 +150,8 @@ OSM_SEL_POST    INCRB
 ; Identical to the OSM_SEL_POST callback function (see above) but it is being
 ; called before the functionality and semantics associated with a certain
 ; menu item has been handled by the framework.
-OSM_SEL_PRE     INCRB
-                XOR     R8, R8
+OSM_SEL_PRE     XOR     R8, R8
                 XOR     R9, R9
-                DECRB
                 RET
 
 ; ----------------------------------------------------------------------------
@@ -176,16 +169,13 @@ OSM_SEL_PRE     INCRB
 ; Output:
 ;   R8: 0=no custom message available, otherwise pointer to string
 
-CUSTOM_MSG      XOR     R8, R8
-                RET              
+CUSTOM_MSG      XOR     R8, R8                  ; no custom message
+                RET
 
 ; ----------------------------------------------------------------------------
 ; Core specific constants and strings
 ; ----------------------------------------------------------------------------
 
-; Add your core specific constants and strings here
-
-; This needs to be the last thing before the "Variables" sections starts
 END_OF_ROM      .DW 0
 
 ; ----------------------------------------------------------------------------
@@ -196,11 +186,7 @@ END_OF_ROM      .DW 0
                 .ORG    0x8000                  ; RAM starts at 0x8000
 #endif
 
-;
-; add your own variables here
-;
-
-; M2M Shell variables (only include, if you included "shell.asm" above)
+; M2M shell variables
 #include "../../M2M/rom/shell_vars.asm"
 
 ; ----------------------------------------------------------------------------
@@ -210,9 +196,9 @@ END_OF_ROM      .DW 0
 ; The On-Screen-Menu uses the heap for several data structures. This heap
 ; is located before the main system heap in memory.
 ; You need to deduct MENU_HEAP_SIZE from the actual heap size below.
-; Example: If your HEAP_SIZE would be 29696, then you write 29696-1024=28672
-; instead, but when doing the sanity check calculations, you use 29696
-MENU_HEAP_SIZE  .EQU 1024
+; Example: If your HEAP_SIZE would be 30208, then you write 30208-1664=28544
+; instead, but when doing the sanity check calculations, you use 30208
+MENU_HEAP_SIZE  .EQU 1664
 
 #ifndef RELEASE
 
@@ -220,27 +206,27 @@ MENU_HEAP_SIZE  .EQU 1024
 ; this needs to be the last variable before the monitor variables as it is
 ; only defined as "BLOCK 1" to avoid a large amount of null-values in
 ; the ROM file
-HEAP_SIZE       .EQU 6144                       ; 7168 - 1024 = 6144
+HEAP_SIZE       .EQU 5504                       ; 7168 - 1664 = 5504
 HEAP            .BLOCK 1
 
 ; in RELEASE mode: 28k of heap which leads to a better user experience when
 ; it comes to folders with a lot of files
 #else
 
-HEAP_SIZE       .EQU 28672                      ; 29696 - 1024 = 28672
+HEAP_SIZE       .EQU 28544                      ; 30208 - 1664 = 28544
 HEAP            .BLOCK 1
-
+ 
 ; The monitor variables use 22 words, round to 32 for being safe and subtract
 ; it from FF00 because this is at the moment the highest address that we
 ; can use as RAM: 0xFEE0
-; The stack starts at 0xFEE0 (search var VAR$STACK_START in osm_rom.lis to
+; The stack starts at 0xFEE0 (search var VAR$STACK_START in m2m-rom.lis to
 ; calculate the address). To see, if there is enough room for the stack
-; given the HEAP_SIZE do this calculation: Add 29696 words to HEAP which
-; is currently 0xXXXX and subtract the result from 0xFEE0. This yields
-; currently a stack size of more than 1.5k words, which is sufficient
-; for this program.
+; given the HEAP_SIZE do this calculation: Add 30208 words to HEAP which
+; is currently 0x81E6 and subtract the result from 0xFEE0. This yields
+; currently a stack size of 1786, which is more than 1.5k words, and therefore
+; sufficient for this program.
 
-                .ORG    0xFEE0                  ; TODO: automate calculation
+                .ORG    0xFEE0                  ; @TODO: automate calculation
 #endif
 
 ; STACK_SIZE: Size of the global stack and should be a minimum of 768 words
@@ -252,3 +238,4 @@ STACK_SIZE      .EQU    1536
 B_STACK_SIZE    .EQU    768
 
 #include "../../M2M/rom/main_vars.asm"
+
