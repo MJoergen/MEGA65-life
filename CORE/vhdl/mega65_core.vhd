@@ -374,8 +374,9 @@ begin
 
    tdp_ram_inst : entity work.tdp_ram
       generic map (
-         ADDR_WIDTH => 10,
-         DATA_WIDTH => G_CELL_BITS * G_COLS
+         READ_BEFORE_WRITE => true,
+         ADDR_WIDTH        => 10,
+         DATA_WIDTH        => G_CELL_BITS * G_COLS
       )
       port map (
          clock_a   => main_clk_o,

@@ -7,11 +7,12 @@ library std;
 
 entity tdp_ram is
    generic (
-      ADDR_WIDTH   : positive;
-      DATA_WIDTH   : positive;
-      ROM_PRELOAD  : boolean := false;
-      ROM_FILE     : string  := "";
-      ROM_FILE_HEX : boolean := false
+      READ_BEFORE_WRITE : boolean := false;
+      ADDR_WIDTH        : positive;
+      DATA_WIDTH        : positive;
+      ROM_PRELOAD       : boolean := false;
+      ROM_FILE          : string  := "";
+      ROM_FILE_HEX      : boolean := false
    );
    port (
       clock_a   : in  std_logic;
@@ -68,6 +69,12 @@ architecture synthesis of tdp_ram is
    end;
 
    signal ram           : t_ram := InitRAM(ROM_FILE);
+   signal address_a_reg : std_logic_vector(ADDR_WIDTH-1 downto 0);
+   signal address_b_reg : std_logic_vector(ADDR_WIDTH-1 downto 0);
+
+   -- Read before write
+   signal q_rbw_a       : std_logic_vector(DATA_WIDTH-1 downto 0);
+   signal q_rbw_b       : std_logic_vector(DATA_WIDTH-1 downto 0);
 
 begin
 
@@ -79,7 +86,8 @@ begin
                ram(to_integer(unsigned(address_a))) <= data_a;
             end if;
 
-            q_a <= ram(to_integer(unsigned(address_a)));
+            address_a_reg <= address_a;
+            q_rbw_a <= ram(to_integer(unsigned(address_a)));
          end if;
       end if;
 
@@ -89,10 +97,20 @@ begin
                ram(to_integer(unsigned(address_b))) <= data_b;
             end if;
 
-            q_b <= ram(to_integer(unsigned(address_b)));
+            address_b_reg <= address_b;
+            q_rbw_b <= ram(to_integer(unsigned(address_b)));
          end if;
       end if;
    end process ram_proc;
+
+
+   rbw_gen : if READ_BEFORE_WRITE generate
+      q_a <= q_rbw_a;
+      q_b <= q_rbw_b;
+   else generate
+      q_a <= ram(to_integer(unsigned(address_a_reg)));
+      q_b <= ram(to_integer(unsigned(address_b_reg)));
+   end generate rbw_gen;
 
 end architecture synthesis;
 
