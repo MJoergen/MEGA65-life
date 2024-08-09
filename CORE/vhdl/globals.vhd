@@ -36,7 +36,7 @@ package globals is
 
    -- Leave this setting true. Only if the core already outputs a modern high-resolution
    -- HDMI-compatible video stream should you consider setting this to false.
-   constant ENABLE_ASCALER       : boolean                       := true;
+   constant ENABLE_ASCALER       : boolean                       := false;
 
    type     vd_buf_array is array (natural range <>) of std_logic_vector(15 downto 0);
    constant C_VDNUM              : natural                       := 1;
