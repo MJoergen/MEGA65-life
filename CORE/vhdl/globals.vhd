@@ -34,6 +34,10 @@ package globals is
    constant CHAR_MEM_SIZE        : natural                       := CHARS_DX * CHARS_DY;
    constant VRAM_ADDR_WIDTH      : natural                       := f_log2(CHAR_MEM_SIZE);
 
+   -- Leave this setting true. Only if the core already outputs a modern high-resolution
+   -- HDMI-compatible video stream should you consider setting this to false.
+   constant ENABLE_ASCALER       : boolean                       := true;
+
    type     vd_buf_array is array (natural range <>) of std_logic_vector(15 downto 0);
    constant C_VDNUM              : natural                       := 1;
    constant C_VD_DEVICE          : std_logic_vector(15 downto 0) := x"0110";
