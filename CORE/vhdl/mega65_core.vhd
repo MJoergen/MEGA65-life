@@ -235,11 +235,17 @@ architecture synthesis of mega65_core is
    constant C_MENU_INIT_DENSITY_15 : natural                     := 8;
    constant C_MENU_INIT_DENSITY_10 : natural                     := 9;
 
-   constant C_MENU_GEN_SPEED_FASTER : natural                    := 16;
-   constant C_MENU_GEN_SPEED_FAST   : natural                    := 17;
-   constant C_MENU_GEN_SPEED_MEDIUM : natural                    := 18;
-   constant C_MENU_GEN_SPEED_SLOW   : natural                    := 19;
-   constant C_MENU_GEN_SPEED_SLOWER : natural                    := 20;
+   constant C_MENU_INIT_BORDER_20 : natural                      := 16;
+   constant C_MENU_INIT_BORDER_15 : natural                      := 17;
+   constant C_MENU_INIT_BORDER_10 : natural                      := 18;
+   constant C_MENU_INIT_BORDER_5  : natural                      := 19;
+   constant C_MENU_INIT_BORDER_0  : natural                      := 20;
+
+   constant C_MENU_GEN_SPEED_FASTER : natural                    := 27;
+   constant C_MENU_GEN_SPEED_FAST   : natural                    := 28;
+   constant C_MENU_GEN_SPEED_MEDIUM : natural                    := 29;
+   constant C_MENU_GEN_SPEED_SLOW   : natural                    := 30;
+   constant C_MENU_GEN_SPEED_SLOWER : natural                    := 31;
 
    signal   main_life_ready         : std_logic;
    signal   main_life_addr          : std_logic_vector(9 downto 0);
@@ -249,6 +255,7 @@ architecture synthesis of mega65_core is
    signal   main_life_count         : std_logic_vector(15 downto 0);
    signal   main_life_gens          : std_logic_vector(15 downto 0);
    signal   main_init_density       : natural range 0 to 100;
+   signal   main_init_border        : natural range 0 to G_COLS/2;
    signal   main_generational_speed : natural range 0 to 31;
 
    signal   main_controller_busy    : std_logic;
@@ -303,6 +310,23 @@ begin
       end if;
    end process init_density_proc;
 
+   init_border_proc : process (main_clk_o)
+   begin
+      if rising_edge(main_clk_o) then
+         if main_osm_control_i(C_MENU_INIT_BORDER_20) = '1' then
+            main_init_border <= 20;
+         elsif main_osm_control_i(C_MENU_INIT_BORDER_15) = '1' then
+            main_init_border <= 15;
+         elsif main_osm_control_i(C_MENU_INIT_BORDER_10) = '1' then
+            main_init_border <= 10;
+         elsif main_osm_control_i(C_MENU_INIT_BORDER_5) = '1' then
+            main_init_border <= 5;
+         elsif main_osm_control_i(C_MENU_INIT_BORDER_0) = '1' then
+            main_init_border <= 0;
+         end if;
+      end if;
+   end process init_border_proc;
+
    generational_speed_proc : process (main_clk_o)
    begin
       if rising_edge(main_clk_o) then
@@ -354,6 +378,7 @@ begin
          uart_tx_o                 => uart_tx_o,
          uart_rx_i                 => uart_rx_i,
          main_init_density_i       => main_init_density,
+         main_init_border_i        => main_init_border,
          main_generational_speed_i => main_generational_speed,
          main_life_ready_i         => main_life_ready,
          main_life_step_o          => main_life_step,

@@ -18,6 +18,7 @@ entity controller is
       uart_tx_ready_i      : in    std_logic;
       uart_tx_data_o       : out   std_logic_vector(7 downto 0);
       init_density_i       : in    natural range 0 to 100;
+      init_border_i        : in    natural range 0 to G_COLS/2;
       generational_speed_i : in    natural range 0 to 31;
       ready_i              : in    std_logic;
       step_o               : out   std_logic;
@@ -116,7 +117,14 @@ begin
                end if;
 
                cell_v                                                                        := (others => to_stdlogic(rand7 < init_rand7_cutoff));
+               if cur_col < init_border_i or cur_col + init_border_i >= G_COLS then
+                  cell_v := (others => '0');
+               end if;
+               if cur_row < init_border_i or cur_row + init_border_i >= G_ROWS then
+                  cell_v := (others => '0');
+               end if;
                board_wr_data_o((cur_col + 1) * G_CELL_BITS - 1 downto cur_col * G_CELL_BITS) <= cell_v;
+
                if cur_col < G_COLS - 1 then
                   cur_col <= cur_col + 1;
                else

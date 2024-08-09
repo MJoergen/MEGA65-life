@@ -26,6 +26,7 @@ entity controller_wrapper is
       uart_tx_o                 : out   std_logic;
       uart_rx_i                 : in    std_logic;
       main_init_density_i       : in    natural range 0 to 100;
+      main_init_border_i        : in    natural range 0 to G_COLS/2;
       main_generational_speed_i : in    natural range 0 to 31;
       main_life_ready_i         : in    std_logic;
       main_life_step_o          : out   std_logic;
@@ -309,6 +310,7 @@ begin
          uart_tx_ready_i      => main_uart_tx_ready,
          uart_tx_data_o       => main_uart_tx_data,
          init_density_i       => main_init_density_i,
+         init_border_i        => main_init_border_i,
          generational_speed_i => main_generational_speed_i,
          ready_i              => main_life_ready_i,
          step_o               => main_life_step_o,
