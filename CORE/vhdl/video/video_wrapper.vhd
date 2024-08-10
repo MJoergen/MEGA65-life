@@ -14,21 +14,23 @@ entity video_wrapper is
       G_COLS       : integer
    );
    port (
-      video_clk_i    : in    std_logic;
-      video_rst_i    : in    std_logic;
-      video_count_i  : in    std_logic_vector(15 downto 0);
-      video_gens_i   : in    std_logic_vector(15 downto 0);
-      video_addr_o   : out   std_logic_vector(9 downto 0);
-      video_data_i   : in    std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
-      video_ce_o     : out   std_logic;
-      video_ce_ovl_o : out   std_logic;
-      video_red_o    : out   std_logic_vector(7 downto 0);
-      video_green_o  : out   std_logic_vector(7 downto 0);
-      video_blue_o   : out   std_logic_vector(7 downto 0);
-      video_vs_o     : out   std_logic;
-      video_hs_o     : out   std_logic;
-      video_hblank_o : out   std_logic;
-      video_vblank_o : out   std_logic
+      video_clk_i       : in    std_logic;
+      video_rst_i       : in    std_logic;
+      video_count_i     : in    std_logic_vector(15 downto 0);
+      video_gens_i      : in    std_logic_vector(15 downto 0);
+      video_start_row_i : in    natural range 0 to G_ROWS - 1;
+      video_start_col_i : in    natural range 0 to G_COLS - 1;
+      video_addr_o      : out   std_logic_vector(9 downto 0);
+      video_data_i      : in    std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
+      video_ce_o        : out   std_logic;
+      video_ce_ovl_o    : out   std_logic;
+      video_red_o       : out   std_logic_vector(7 downto 0);
+      video_green_o     : out   std_logic_vector(7 downto 0);
+      video_blue_o      : out   std_logic_vector(7 downto 0);
+      video_vs_o        : out   std_logic;
+      video_hs_o        : out   std_logic;
+      video_hblank_o    : out   std_logic;
+      video_vblank_o    : out   std_logic
    );
 end entity video_wrapper;
 
@@ -49,16 +51,18 @@ begin
          G_COLS       => G_COLS
       )
       port map (
-         video_clk_i    => video_clk_i,
-         video_rst_i    => video_rst_i,
-         video_count_i  => video_count_i,
-         video_gens_i   => video_gens_i,
-         video_addr_o   => video_addr_o,
-         video_data_i   => video_data_i,
+         video_clk_i       => video_clk_i,
+         video_rst_i       => video_rst_i,
+         video_count_i     => video_count_i,
+         video_gens_i      => video_gens_i,
+         video_start_row_i => video_start_row_i,
+         video_start_col_i => video_start_col_i,
+         video_addr_o      => video_addr_o,
+         video_data_i      => video_data_i,
          video_x_i      => video_x,
          video_y_i      => video_y,
-         video_char_o   => video_char,
-         video_colors_o => video_colors
+         video_char_o      => video_char,
+         video_colors_o    => video_colors
       ); -- video_board_inst
 
    video_text_mode_inst : entity work.video_text_mode

@@ -32,6 +32,8 @@ entity controller_wrapper is
       main_life_step_o          : out   std_logic;
       main_life_gens_o          : out   std_logic_vector(15 downto 0);
       main_life_count_o         : out   std_logic_vector(15 downto 0);
+      main_life_start_row_o     : out   natural range 0 to G_ROWS - 1;
+      main_life_start_col_o     : out   natural range 0 to G_COLS - 1;
       main_life_addr_i          : in    std_logic_vector(9 downto 0);
       main_life_rd_data_o       : out   std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
       main_life_wr_data_i       : in    std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
@@ -343,6 +345,8 @@ begin
          ready_i              => main_life_ready_i,
          step_o               => main_life_step_o,
          count_o              => main_life_gens_o,
+         start_row_o          => main_life_start_row_o,
+         start_col_o          => main_life_start_col_o,
          board_busy_o         => main_controller_busy,
          board_addr_o         => main_controller_addr,
          board_rd_data_i      => main_board_rd_data_i,

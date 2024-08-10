@@ -13,16 +13,18 @@ entity video_board is
       G_COLS       : integer
    );
    port (
-      video_clk_i    : in    std_logic;
-      video_rst_i    : in    std_logic;
-      video_x_i      : in    std_logic_vector(7 downto 0);
-      video_y_i      : in    std_logic_vector(7 downto 0);
-      video_gens_i   : in    std_logic_vector(15 downto 0);
-      video_count_i  : in    std_logic_vector(15 downto 0);
-      video_addr_o   : out   std_logic_vector(9 downto 0);
-      video_data_i   : in    std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
-      video_char_o   : out   std_logic_vector(7 downto 0);
-      video_colors_o : out   std_logic_vector(15 downto 0)
+      video_clk_i       : in    std_logic;
+      video_rst_i       : in    std_logic;
+      video_x_i         : in    std_logic_vector(7 downto 0);
+      video_y_i         : in    std_logic_vector(7 downto 0);
+      video_gens_i      : in    std_logic_vector(15 downto 0);
+      video_count_i     : in    std_logic_vector(15 downto 0);
+      video_start_row_i : in    natural range 0 to G_ROWS - 1;
+      video_start_col_i : in    natural range 0 to G_COLS - 1;
+      video_addr_o      : out   std_logic_vector(9 downto 0);
+      video_data_i      : in    std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
+      video_char_o      : out   std_logic_vector(7 downto 0);
+      video_colors_o    : out   std_logic_vector(15 downto 0)
    );
 end entity video_board;
 
@@ -48,9 +50,33 @@ architecture synthesis of video_board is
    signal   video_dec_count_last  : std_logic;
    signal   video_dec_count_str   : std_logic_vector(39 downto 0);
 
+   signal   video_board_x : natural range 0 to G_COLS-1;
+   signal   video_board_y : natural range 0 to G_ROWS-1;
+
 begin
 
-   video_addr_o <= to_stdlogicvector(to_integer(video_y_i - C_START_Y), 10);
+   video_pan_proc : process (all)
+      variable tmp_x_v : natural range 0 to G_COLS-1;
+      variable tmp_y_v : natural range 0 to G_ROWS-1;
+   begin
+      tmp_x_v := to_integer(video_x_i - C_START_X);
+      tmp_y_v := to_integer(video_y_i - C_START_Y);
+
+      if tmp_x_v + video_start_col_i < G_COLS then
+         video_board_x <= tmp_x_v + video_start_col_i;
+      else
+         video_board_x <= tmp_x_v + video_start_col_i  - G_COLS;
+      end if;
+
+      if tmp_y_v + video_start_row_i < G_ROWS then
+         video_board_y <= tmp_y_v + video_start_row_i;
+      else
+         video_board_y <= tmp_y_v + video_start_row_i - G_ROWS;
+      end if;
+   end process video_pan_proc;
+
+
+   video_addr_o <= to_stdlogicvector(video_board_y, 10);
 
    char_proc : process (video_clk_i)
       variable video_dec_index_v : natural range 0 to 4;
@@ -63,7 +89,7 @@ begin
 
          if video_x_i >= C_START_X and video_x_i < C_START_X + G_COLS and
             video_y_i >= C_START_Y and video_y_i < C_START_Y + G_ROWS then
-            col_v  := to_integer(video_x_i - C_START_X);
+            col_v  := video_board_x;
             cell_v := video_data_i((col_v + 1) * G_CELL_BITS - 1 downto col_v * G_CELL_BITS);
             if or (cell_v) = '1' then
                video_char_o <= X"58";

@@ -226,26 +226,26 @@ end entity mega65_core;
 
 architecture synthesis of mega65_core is
 
-   constant C_VIDEO_MODE : video_modes_t                         := C_HDMI_720p_60;
+   constant C_VIDEO_MODE : video_modes_t      := C_HDMI_720p_60;
 
    -- OSM selections within qnice_osm_control_i
-   constant C_MENU_INIT_DENSITY_30 : natural                     := 5;
-   constant C_MENU_INIT_DENSITY_25 : natural                     := 6;
-   constant C_MENU_INIT_DENSITY_20 : natural                     := 7;
-   constant C_MENU_INIT_DENSITY_15 : natural                     := 8;
-   constant C_MENU_INIT_DENSITY_10 : natural                     := 9;
+   constant C_MENU_INIT_DENSITY_30 : natural  := 5;
+   constant C_MENU_INIT_DENSITY_25 : natural  := 6;
+   constant C_MENU_INIT_DENSITY_20 : natural  := 7;
+   constant C_MENU_INIT_DENSITY_15 : natural  := 8;
+   constant C_MENU_INIT_DENSITY_10 : natural  := 9;
 
-   constant C_MENU_INIT_BORDER_20 : natural                      := 16;
-   constant C_MENU_INIT_BORDER_15 : natural                      := 17;
-   constant C_MENU_INIT_BORDER_10 : natural                      := 18;
-   constant C_MENU_INIT_BORDER_5  : natural                      := 19;
-   constant C_MENU_INIT_BORDER_0  : natural                      := 20;
+   constant C_MENU_INIT_BORDER_20 : natural   := 16;
+   constant C_MENU_INIT_BORDER_15 : natural   := 17;
+   constant C_MENU_INIT_BORDER_10 : natural   := 18;
+   constant C_MENU_INIT_BORDER_5  : natural   := 19;
+   constant C_MENU_INIT_BORDER_0  : natural   := 20;
 
-   constant C_MENU_GEN_SPEED_FASTER : natural                    := 27;
-   constant C_MENU_GEN_SPEED_FAST   : natural                    := 28;
-   constant C_MENU_GEN_SPEED_MEDIUM : natural                    := 29;
-   constant C_MENU_GEN_SPEED_SLOW   : natural                    := 30;
-   constant C_MENU_GEN_SPEED_SLOWER : natural                    := 31;
+   constant C_MENU_GEN_SPEED_FASTER : natural := 27;
+   constant C_MENU_GEN_SPEED_FAST   : natural := 28;
+   constant C_MENU_GEN_SPEED_MEDIUM : natural := 29;
+   constant C_MENU_GEN_SPEED_SLOW   : natural := 30;
+   constant C_MENU_GEN_SPEED_SLOWER : natural := 31;
 
    signal   main_life_ready         : std_logic;
    signal   main_life_step          : std_logic;
@@ -255,6 +255,8 @@ architecture synthesis of mega65_core is
    signal   main_life_wr_en         : std_logic;
    signal   main_life_gens          : std_logic_vector(15 downto 0);
    signal   main_life_count         : std_logic_vector(15 downto 0);
+   signal   main_life_start_row     : natural range 0 to G_ROWS - 1;
+   signal   main_life_start_col     : natural range 0 to G_COLS - 1;
    signal   main_init_density       : natural range 0 to 100;
    signal   main_init_border        : natural range 0 to 50;
    signal   main_generational_speed : natural range 0 to 31;
@@ -264,10 +266,12 @@ architecture synthesis of mega65_core is
    signal   main_tdp_wr_data : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
    signal   main_tdp_wr_en   : std_logic;
 
-   signal   video_gens     : std_logic_vector(15 downto 0);
-   signal   video_count    : std_logic_vector(15 downto 0);
-   signal   video_mem_addr : std_logic_vector(9 downto 0);
-   signal   video_mem_data : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
+   signal   video_gens      : std_logic_vector(15 downto 0);
+   signal   video_count     : std_logic_vector(15 downto 0);
+   signal   video_start_row : std_logic_vector(15 downto 0);
+   signal   video_start_col : std_logic_vector(15 downto 0);
+   signal   video_mem_addr  : std_logic_vector(9 downto 0);
+   signal   video_mem_data  : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
 
 begin
 
@@ -379,6 +383,8 @@ begin
          main_life_wr_en_i         => main_life_wr_en,
          main_life_gens_o          => main_life_gens,
          main_life_count_o         => main_life_count,
+         main_life_start_row_o     => main_life_start_row,
+         main_life_start_col_o     => main_life_start_col,
          main_board_addr_o         => main_tdp_addr,
          main_board_rd_data_i      => main_tdp_rd_data,
          main_board_wr_data_o      => main_tdp_wr_data,
@@ -419,15 +425,19 @@ begin
 
    xpm_cdc_array_single_inst : component xpm_cdc_array_single
       generic map (
-         WIDTH => 32
+         WIDTH => 64
       )
       port map (
          src_clk                => main_clk_o,
          src_in(15 downto 0)    => main_life_count,
          src_in(31 downto 16)   => main_life_gens,
+         src_in(47 downto 32)   => std_logic_vector(to_unsigned(main_life_start_row, 16)),
+         src_in(63 downto 48)   => std_logic_vector(to_unsigned(main_life_start_col, 16)),
          dest_clk               => video_clk_o,
          dest_out(15 downto 0)  => video_count,
-         dest_out(31 downto 16) => video_gens
+         dest_out(31 downto 16) => video_gens,
+         dest_out(47 downto 32) => video_start_row,
+         dest_out(63 downto 48) => video_start_col
       ); -- xpm_cdc_array_single_inst
 
    video_wrapper_inst : entity work.video_wrapper
@@ -439,21 +449,23 @@ begin
          G_COLS       => G_COLS
       )
       port map (
-         video_clk_i    => video_clk_o,
-         video_rst_i    => video_rst_o,
-         video_addr_o   => video_mem_addr,
-         video_data_i   => video_mem_data,
-         video_gens_i   => video_gens,
-         video_count_i  => video_count,
-         video_ce_o     => video_ce_o,
-         video_ce_ovl_o => video_ce_ovl_o,
-         video_red_o    => video_red_o,
-         video_green_o  => video_green_o,
-         video_blue_o   => video_blue_o,
-         video_vs_o     => video_vs_o,
-         video_hs_o     => video_hs_o,
-         video_hblank_o => video_hblank_o,
-         video_vblank_o => video_vblank_o
+         video_clk_i       => video_clk_o,
+         video_rst_i       => video_rst_o,
+         video_addr_o      => video_mem_addr,
+         video_data_i      => video_mem_data,
+         video_gens_i      => video_gens,
+         video_count_i     => video_count,
+         video_start_row_i => to_integer(unsigned(video_start_row)),
+         video_start_col_i => to_integer(unsigned(video_start_col)),
+         video_ce_o        => video_ce_o,
+         video_ce_ovl_o    => video_ce_ovl_o,
+         video_red_o       => video_red_o,
+         video_green_o     => video_green_o,
+         video_blue_o      => video_blue_o,
+         video_vs_o        => video_vs_o,
+         video_hs_o        => video_hs_o,
+         video_hblank_o    => video_hblank_o,
+         video_vblank_o    => video_vblank_o
       ); -- video_wrapper_inst
 
 

@@ -23,6 +23,8 @@ entity controller is
       ready_i              : in    std_logic;
       step_o               : out   std_logic;
       count_o              : out   std_logic_vector(15 downto 0);
+      start_row_o          : out   natural range 0 to G_ROWS - 1;
+      start_col_o          : out   natural range 0 to G_COLS - 1;
       board_busy_o         : out   std_logic;
       board_addr_o         : out   std_logic_vector(9 downto 0);
       board_rd_data_i      : in    std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
@@ -35,8 +37,9 @@ architecture synthesis of controller is
 
    constant C_POPULATION_RATE : natural                  := 25; -- Initial population rate in %
 
-   type     state_type is (INIT_ST, IDLE_ST, CONTINUOUS_ST, PRINTING_ST);
-   signal   state : state_type                           := INIT_ST;
+   type     state_type is (INIT_ST, IDLE_ST, PRINTING_ST);
+   signal   state           : state_type                 := INIT_ST;
+   signal   continuous_mode : std_logic;
 
    signal   cur_col      : natural range 0 to G_COLS + 1;
    signal   cur_row      : natural range 0 to G_ROWS;
@@ -104,7 +107,10 @@ begin
          init_border_cutoff        <= init_border_cutoff_prelim / 100;
 
          if ready_i = '1' then
-            step_o <= '0';
+            step_o <= step and continuous_mode;
+            if (step and continuous_mode) = '1' then
+               count_o <= count_o + 1;
+            end if;
          end if;
          if uart_tx_ready_i = '1' then
             uart_tx_valid_o <= '0';
@@ -142,14 +148,43 @@ begin
 
                   case to_integer(cmd_data_i) is
 
+                     when character'pos('D') =>
+                        if start_row_o > 0 then
+                           start_row_o <= start_row_o - 1;
+                        else
+                           start_row_o <= G_ROWS - 1;
+                        end if;
+
+                     when character'pos('U') =>
+                        if start_row_o < G_ROWS - 1 then
+                           start_row_o <= start_row_o + 1;
+                        else
+                           start_row_o <= 0;
+                        end if;
+
+                     when character'pos('R') =>
+                        if start_col_o > 0 then
+                           start_col_o <= start_col_o - 1;
+                        else
+                           start_col_o <= G_COLS - 1;
+                        end if;
+
+                     when character'pos('L') =>
+                        if start_col_o < G_COLS - 1 then
+                           start_col_o <= start_col_o + 1;
+                        else
+                           start_col_o <= 0;
+                        end if;
+
                      when character'pos('C') =>
-                        state <= CONTINUOUS_ST;
+                        continuous_mode <= not continuous_mode;
 
                      when character'pos('I') =>
-                        cur_col <= 0;
-                        cur_row <= 0;
-                        count_o <= (others => '0');
-                        state   <= INIT_ST;
+                        cur_col         <= 0;
+                        cur_row         <= 0;
+                        count_o         <= (others => '0');
+                        continuous_mode <= '0';
+                        state           <= INIT_ST;
 
                      when character'pos('P') =>
                         cur_col      <= 0;
@@ -158,24 +193,18 @@ begin
                         state        <= PRINTING_ST;
 
                      when character'pos('S') =>
-                        step_o  <= '1';
-                        count_o <= count_o + 1;
+                        step_o          <= '1';
+                        count_o         <= count_o + 1;
+                        continuous_mode <= '0';
+
+                     when character'pos(' ') =>
+                        continuous_mode <= '0';
 
                      when others =>
                         null;
 
                   end case;
 
-               end if;
-
-            when CONTINUOUS_ST =>
-               step_o <= step;
-               if step = '1' then
-                  count_o <= count_o + 1;
-               end if;
-
-               if cmd_valid_i = '1' then
-                  state <= IDLE_ST;
                end if;
 
             when PRINTING_ST =>
@@ -213,11 +242,14 @@ begin
          end case;
 
          if rst_i = '1' then
-            wait_for_ram <= '0';
-            cur_row      <= 0;
-            cur_col      <= 0;
-            state        <= INIT_ST;
-            count_o      <= (others => '0');
+            continuous_mode <= '0';
+            wait_for_ram    <= '0';
+            cur_row         <= 0;
+            cur_col         <= 0;
+            state           <= INIT_ST;
+            count_o         <= (others => '0');
+            start_row_o     <= 0;
+            start_col_o     <= 0;
          end if;
       end if;
    end process fsm_proc;
