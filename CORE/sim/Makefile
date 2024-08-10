@@ -7,6 +7,7 @@ SRCS += ../../M2M/QNICE/vhdl/tools.vhd
 SRCS += ../vhdl/clk.vhd
 SRCS += ../vhdl/globals.vhd
 SRCS += ../vhdl/life.vhd
+SRCS += ../vhdl/video/shift_registers.vhd
 SRCS += ../vhdl/controller/lfsr.vhd
 SRCS += ../vhdl/controller/random.vhd
 SRCS += ../vhdl/controller/controller.vhd
@@ -15,7 +16,6 @@ SRCS += ../vhdl/video/font.vhd
 SRCS += ../vhdl/video/divexact.vhd
 SRCS += ../vhdl/video/slv_to_dec.vhd
 SRCS += ../vhdl/video/vga_chars.vhd
-SRCS += ../vhdl/video/shift_registers.vhd
 SRCS += ../vhdl/video/video_text_mode.vhd
 SRCS += ../vhdl/video/video_board.vhd
 SRCS += ../vhdl/video/video_wrapper.vhd
@@ -28,8 +28,8 @@ TB = life
 TB = mega65_core
 
 GENERICS += -gG_CELL_BITS=4
-GENERICS += -gG_ROWS=89
-GENERICS += -gG_COLS=160
+GENERICS += -gG_ROWS=8
+GENERICS += -gG_COLS=8
 GENERICS += -gG_BOARD=R6
 
 all:

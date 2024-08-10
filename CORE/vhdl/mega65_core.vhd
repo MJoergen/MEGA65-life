@@ -248,36 +248,24 @@ architecture synthesis of mega65_core is
    constant C_MENU_GEN_SPEED_SLOWER : natural                    := 31;
 
    signal   main_life_ready         : std_logic;
+   signal   main_life_step          : std_logic;
    signal   main_life_addr          : std_logic_vector(9 downto 0);
+   signal   main_life_rd_data       : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
    signal   main_life_wr_data       : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
    signal   main_life_wr_en         : std_logic;
-   signal   main_life_step          : std_logic;
-   signal   main_life_count         : std_logic_vector(15 downto 0);
    signal   main_life_gens          : std_logic_vector(15 downto 0);
+   signal   main_life_count         : std_logic_vector(15 downto 0);
    signal   main_init_density       : natural range 0 to 100;
    signal   main_init_border        : natural range 0 to 50;
    signal   main_generational_speed : natural range 0 to 31;
-
-   signal   main_controller_busy    : std_logic;
-   signal   main_controller_addr    : std_logic_vector(9 downto 0);
-   signal   main_controller_wr_data : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
-   signal   main_controller_wr_en   : std_logic;
 
    signal   main_tdp_addr    : std_logic_vector(9 downto 0);
    signal   main_tdp_rd_data : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
    signal   main_tdp_wr_data : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
    signal   main_tdp_wr_en   : std_logic;
 
-   signal   main_row_cells_up    : std_logic_vector(G_COLS - 1 downto 0);
-   signal   main_row_cells_down  : std_logic_vector(G_COLS - 1 downto 0);
-   signal   main_tdp_wr_en_d     : std_logic;
-   signal   main_cell_count_up   : std_logic_vector(15 downto 0) := (others => '0');
-   signal   main_cell_count_down : std_logic_vector(15 downto 0) := (others => '0');
-   signal   main_cell_count      : std_logic_vector(15 downto 0) := (others => '0');
-   signal   main_life_ready_d3   : std_logic;
-
-   signal   video_count    : std_logic_vector(15 downto 0);
    signal   video_gens     : std_logic_vector(15 downto 0);
+   signal   video_count    : std_logic_vector(15 downto 0);
    signal   video_mem_addr : std_logic_vector(9 downto 0);
    signal   video_mem_data : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
 
@@ -360,7 +348,7 @@ begin
          ready_o   => main_life_ready,
          step_i    => main_life_step,
          addr_o    => main_life_addr,
-         rd_data_i => main_tdp_rd_data,
+         rd_data_i => main_life_rd_data,
          wr_data_o => main_life_wr_data,
          wr_en_o   => main_life_wr_en
       ); -- life_inst
@@ -385,20 +373,22 @@ begin
          main_generational_speed_i => main_generational_speed,
          main_life_ready_i         => main_life_ready,
          main_life_step_o          => main_life_step,
+         main_life_addr_i          => main_life_addr,
+         main_life_rd_data_o       => main_life_rd_data,
+         main_life_wr_data_i       => main_life_wr_data,
+         main_life_wr_en_i         => main_life_wr_en,
          main_life_gens_o          => main_life_gens,
-         main_board_busy_o         => main_controller_busy,
-         main_board_addr_o         => main_controller_addr,
+         main_life_count_o         => main_life_count,
+         main_board_addr_o         => main_tdp_addr,
          main_board_rd_data_i      => main_tdp_rd_data,
-         main_board_wr_data_o      => main_controller_wr_data,
-         main_board_wr_en_o        => main_controller_wr_en
+         main_board_wr_data_o      => main_tdp_wr_data,
+         main_board_wr_en_o        => main_tdp_wr_en
       ); -- controller_wrapper_inst
 
-   main_tdp_addr    <= main_controller_addr when main_controller_busy = '1' else
-                       main_life_addr;
-   main_tdp_wr_data <= main_controller_wr_data when main_controller_busy = '1' else
-                       main_life_wr_data;
-   main_tdp_wr_en   <= main_controller_wr_en when main_controller_busy = '1' else
-                       main_life_wr_en;
+
+   ---------------------------------------------------------------------------------------------
+   -- Dual Clock Memory
+   ---------------------------------------------------------------------------------------------
 
    tdp_ram_inst : entity work.tdp_ram
       generic map (
@@ -421,89 +411,6 @@ begin
          wren_b    => '0',
          q_b       => video_mem_data
       ); -- tdp_ram_inst
-
-   shift_registers_inst : entity work.shift_registers
-      generic map (
-         G_DATA_SIZE => 1,
-         G_DEPTH     => 3
-      )
-      port map (
-         clk_i     => main_clk_o,
-         clken_i   => '1',
-         data_i(0) => main_life_ready,
-         data_o(0) => main_life_ready_d3
-      ); -- shift_registers_inst
-
-   main_cell_count_proc : process (main_clk_o)
-      --
-
-      pure function get_row_cells (
-         arg : std_logic_vector
-      ) return std_logic_vector is
-         variable res_v  : std_logic_vector(G_COLS - 1 downto 0);
-         variable cell_v : std_logic_vector(G_CELL_BITS - 1 downto 0);
-      begin
-         --
-         for i in 0 to G_COLS - 1 loop
-            cell_v   := arg((i + 1) * G_CELL_BITS - 1 downto i * G_CELL_BITS);
-            res_v(i) := or(cell_v);
-         end loop;
-
-         return res_v;
-      end function get_row_cells;
-
-      pure function count_ones (
-         arg : std_logic_vector
-      ) return natural is
-         variable res_v : natural range 0 to arg'length;
-      begin
-         res_v := 0;
-
-         for i in arg'range loop
-            if arg(i) = '1' then
-               res_v := res_v + 1;
-            end if;
-         end loop;
-
-         return res_v;
-      end function count_ones;
-
-   --
-   begin
-      if rising_edge(main_clk_o) then
-         -- This calculation is pipelined to improve timing.
-         main_tdp_wr_en_d     <= main_tdp_wr_en;
-         main_cell_count_up   <= (others => '0');
-         main_cell_count_down <= (others => '0');
-         main_row_cells_up    <= (others => '0');
-         main_row_cells_down  <= (others => '0');
-
-         -- Stage 1 : Get new and old row
-
-         if main_tdp_wr_en = '1' then
-            main_row_cells_up <= get_row_cells(main_tdp_wr_data);
-         end if;
-
-         if main_tdp_wr_en_d = '1' then
-            main_row_cells_down <= get_row_cells(main_tdp_rd_data);
-         end if;
-
-         -- Stage 2 : Count number of cells in roe
-
-         main_cell_count_up   <= std_logic_vector(to_unsigned(count_ones(main_row_cells_up), 16));
-         main_cell_count_down <= std_logic_vector(to_unsigned(count_ones(main_row_cells_down), 16));
-
-         -- Stage 3 : Update total count
-
-         main_cell_count      <= std_logic_vector(unsigned(main_cell_count) + unsigned(main_cell_count_up) -
-                                                  unsigned(main_cell_count_down));
-
-         -- Store total when engine is idle
-         if main_life_ready_d3 = '1' then
-            main_life_count <= main_cell_count;
-         end if;
-      end if;
-   end process main_cell_count_proc;
 
 
    ---------------------------------------------------------------------------------------------

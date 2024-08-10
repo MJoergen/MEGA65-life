@@ -213,10 +213,11 @@ begin
          end case;
 
          if rst_i = '1' then
-            cur_row <= 0;
-            cur_col <= 0;
-            state   <= INIT_ST;
-            count_o <= (others => '0');
+            wait_for_ram <= '0';
+            cur_row      <= 0;
+            cur_col      <= 0;
+            state        <= INIT_ST;
+            count_o      <= (others => '0');
          end if;
       end if;
    end process fsm_proc;
