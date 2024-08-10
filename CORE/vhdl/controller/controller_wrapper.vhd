@@ -26,7 +26,7 @@ entity controller_wrapper is
       uart_tx_o                 : out   std_logic;
       uart_rx_i                 : in    std_logic;
       main_init_density_i       : in    natural range 0 to 100;
-      main_init_border_i        : in    natural range 0 to G_COLS/2;
+      main_init_border_i        : in    natural range 0 to 50;
       main_generational_speed_i : in    natural range 0 to 31;
       main_life_ready_i         : in    std_logic;
       main_life_step_o          : out   std_logic;
@@ -207,82 +207,82 @@ begin
             case main_key_num is
 
                when C_M65_A =>
-                  main_cmd_data <= X"41";
+                  main_cmd_data <= to_stdlogicvector(character'pos('A'), 8);
 
                when C_M65_B =>
-                  main_cmd_data <= X"42";
+                  main_cmd_data <= to_stdlogicvector(character'pos('B'), 8);
 
                when C_M65_C =>
-                  main_cmd_data <= X"43";
+                  main_cmd_data <= to_stdlogicvector(character'pos('C'), 8);
 
                when C_M65_D =>
-                  main_cmd_data <= X"44";
+                  main_cmd_data <= to_stdlogicvector(character'pos('D'), 8);
 
                when C_M65_E =>
-                  main_cmd_data <= X"45";
+                  main_cmd_data <= to_stdlogicvector(character'pos('E'), 8);
 
                when C_M65_F =>
-                  main_cmd_data <= X"46";
+                  main_cmd_data <= to_stdlogicvector(character'pos('F'), 8);
 
                when C_M65_G =>
-                  main_cmd_data <= X"47";
+                  main_cmd_data <= to_stdlogicvector(character'pos('G'), 8);
 
                when C_M65_H =>
-                  main_cmd_data <= X"48";
+                  main_cmd_data <= to_stdlogicvector(character'pos('H'), 8);
 
                when C_M65_I =>
-                  main_cmd_data <= X"49";
+                  main_cmd_data <= to_stdlogicvector(character'pos('I'), 8);
 
                when C_M65_J =>
-                  main_cmd_data <= X"4A";
+                  main_cmd_data <= to_stdlogicvector(character'pos('J'), 8);
 
                when C_M65_K =>
-                  main_cmd_data <= X"4B";
+                  main_cmd_data <= to_stdlogicvector(character'pos('K'), 8);
 
                when C_M65_L =>
-                  main_cmd_data <= X"4C";
+                  main_cmd_data <= to_stdlogicvector(character'pos('L'), 8);
 
                when C_M65_M =>
-                  main_cmd_data <= X"4D";
+                  main_cmd_data <= to_stdlogicvector(character'pos('M'), 8);
 
                when C_M65_N =>
-                  main_cmd_data <= X"4E";
+                  main_cmd_data <= to_stdlogicvector(character'pos('N'), 8);
 
                when C_M65_O =>
-                  main_cmd_data <= X"4F";
+                  main_cmd_data <= to_stdlogicvector(character'pos('O'), 8);
 
                when C_M65_P =>
-                  main_cmd_data <= X"50";
+                  main_cmd_data <= to_stdlogicvector(character'pos('P'), 8);
 
                when C_M65_Q =>
-                  main_cmd_data <= X"51";
+                  main_cmd_data <= to_stdlogicvector(character'pos('Q'), 8);
 
                when C_M65_R =>
-                  main_cmd_data <= X"52";
+                  main_cmd_data <= to_stdlogicvector(character'pos('R'), 8);
 
                when C_M65_S =>
-                  main_cmd_data <= X"53";
+                  main_cmd_data <= to_stdlogicvector(character'pos('S'), 8);
 
                when C_M65_T =>
-                  main_cmd_data <= X"54";
+                  main_cmd_data <= to_stdlogicvector(character'pos('T'), 8);
 
                when C_M65_U =>
-                  main_cmd_data <= X"55";
+                  main_cmd_data <= to_stdlogicvector(character'pos('U'), 8);
 
                when C_M65_V =>
-                  main_cmd_data <= X"56";
+                  main_cmd_data <= to_stdlogicvector(character'pos('V'), 8);
 
                when C_M65_W =>
-                  main_cmd_data <= X"57";
+                  main_cmd_data <= to_stdlogicvector(character'pos('W'), 8);
 
                when C_M65_X =>
-                  main_cmd_data <= X"58";
+                  main_cmd_data <= to_stdlogicvector(character'pos('X'), 8);
 
                when C_M65_Y =>
-                  main_cmd_data <= X"59";
+                  main_cmd_data <= to_stdlogicvector(character'pos('Y'), 8);
 
                when C_M65_Z =>
-                  main_cmd_data <= X"5A";
+                  main_cmd_data <= to_stdlogicvector(character'pos('Z'), 8);
 
                when others =>
                   main_cmd_valid <= '0';

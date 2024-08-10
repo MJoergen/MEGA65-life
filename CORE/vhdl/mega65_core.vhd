@@ -255,7 +255,7 @@ architecture synthesis of mega65_core is
    signal   main_life_count         : std_logic_vector(15 downto 0);
    signal   main_life_gens          : std_logic_vector(15 downto 0);
    signal   main_init_density       : natural range 0 to 100;
-   signal   main_init_border        : natural range 0 to G_COLS/2;
+   signal   main_init_border        : natural range 0 to 50;
    signal   main_generational_speed : natural range 0 to 31;
 
    signal   main_controller_busy    : std_logic;
@@ -296,6 +296,7 @@ begin
    init_density_proc : process (main_clk_o)
    begin
       if rising_edge(main_clk_o) then
+         main_init_density <= 20; -- default value
          if main_osm_control_i(C_MENU_INIT_DENSITY_30) = '1' then
             main_init_density <= 30;
          elsif main_osm_control_i(C_MENU_INIT_DENSITY_25) = '1' then
@@ -313,6 +314,7 @@ begin
    init_border_proc : process (main_clk_o)
    begin
       if rising_edge(main_clk_o) then
+         main_init_border <= 10; -- default value
          if main_osm_control_i(C_MENU_INIT_BORDER_20) = '1' then
             main_init_border <= 20;
          elsif main_osm_control_i(C_MENU_INIT_BORDER_15) = '1' then
@@ -330,6 +332,7 @@ begin
    generational_speed_proc : process (main_clk_o)
    begin
       if rising_edge(main_clk_o) then
+         main_generational_speed <= 21; -- default value
          if main_osm_control_i(C_MENU_GEN_SPEED_FASTER) = '1' then
             main_generational_speed <= 17;
          elsif main_osm_control_i(C_MENU_GEN_SPEED_FAST) = '1' then
