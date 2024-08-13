@@ -39,7 +39,9 @@ begin
          addr_i    => dut_addr,
          wr_data_i => dut_wr_data,
          wr_en_i   => dut_wr_en,
-         total_o   => dut_total
+         m_ready_i => '1',
+         m_valid_o => open,
+         m_data_o  => dut_total
       ); -- dut_inst
 
    test_proc : process

@@ -32,6 +32,7 @@ entity controller_wrapper is
       main_life_ready_i         : in    std_logic;
       main_life_step_o          : out   std_logic;
       main_bottom_o             : out   std_logic_vector(80 * (G_STAT_SIZE + 1) - 1 downto 0);
+
       main_life_start_row_o     : out   natural range 0 to G_ROWS - 1;
       main_life_start_col_o     : out   natural range 0 to G_COLS - 1;
       main_life_addr_i          : in    std_logic_vector(9 downto 0);
@@ -150,9 +151,14 @@ architecture synthesis of controller_wrapper is
    signal   main_controller_wr_en   : std_logic;
 
    signal   main_life_gens : std_logic_vector(15 downto 0);
-   signal   main_life_stat : std_logic_vector(16 * G_STAT_SIZE - 1 downto 0);
 
-   signal   main_bottom : std_logic_vector(80 * (G_STAT_SIZE + 1) - 1 downto 0);
+   signal   main_stat_ready : std_logic_vector(G_STAT_SIZE downto 0);
+   signal   main_stat_valid : std_logic;
+   signal   main_stat_data  : std_logic_vector(16 * G_STAT_SIZE - 1 downto 0);
+
+   signal   main_bottom       : std_logic_vector(80 * (G_STAT_SIZE + 1) - 1 downto 0);
+   signal   main_bottom_ready : std_logic;
+   signal   main_bottom_valid : std_logic_vector(G_STAT_SIZE downto 0);
 
 begin
 
@@ -390,30 +396,49 @@ begin
          addr_i    => main_board_addr_o,
          wr_data_i => main_board_wr_data_o,
          wr_en_i   => main_board_wr_en_o,
-         total_o   => main_life_stat
+         m_ready_i => and(main_stat_ready),
+         m_valid_o => main_stat_valid,
+         m_data_o  => main_stat_data
       ); -- statistics_inst
+
+   main_bottom_ready <= and(main_bottom_valid);
 
    slv2str_gens_inst : entity work.slv2str
       port map (
-         clk_i  => main_clk_i,
-         rst_i  => main_rst_i,
-         data_i => main_life_gens,
-         str_o  => main_bottom(79 downto 0)
+         clk_i     => main_clk_i,
+         rst_i     => main_rst_i,
+         s_ready_o => main_stat_ready(0),
+         s_valid_i => main_stat_valid and (and(main_stat_ready)),
+         s_data_i  => main_life_gens,
+         m_ready_i => main_bottom_ready,
+         m_valid_o => main_bottom_valid(0),
+         m_str_o   => main_bottom(79 downto 0)
       ); -- slv2str_gens_inst
 
    stat_gen : for i in 0 to G_STAT_SIZE - 1 generate
 
       slv2str_count_inst : entity work.slv2str
          port map (
-            clk_i  => main_clk_i,
-            rst_i  => main_rst_i,
-            data_i => main_life_stat(16 * i + 15 downto 16 * i),
-            str_o  => main_bottom(80 * (i + 1) + 79 downto 80 * (i + 1))
+            clk_i     => main_clk_i,
+            rst_i     => main_rst_i,
+            s_ready_o => main_stat_ready(i + 1),
+            s_valid_i => main_stat_valid and (and(main_stat_ready)),
+            s_data_i  => main_stat_data(16 * i + 15 downto 16 * i),
+            m_ready_i => main_bottom_ready,
+            m_valid_o => main_bottom_valid(i + 1),
+            m_str_o   => main_bottom(80 * (i + 1) + 79 downto 80 * (i + 1))
          ); -- slv2str_count_inst
 
    end generate stat_gen;
 
-   main_bottom_o <= main_bottom;
+   main_bottom_proc : process (main_clk_i)
+   begin
+      if rising_edge(main_clk_i) then
+         if and (main_bottom_valid) = '1' then
+            main_bottom_o <= main_bottom;
+         end if;
+      end if;
+   end process main_bottom_proc;
 
 end architecture synthesis;
 

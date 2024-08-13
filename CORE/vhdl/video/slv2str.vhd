@@ -7,10 +7,14 @@ library ieee;
 
 entity slv2str is
    port (
-      clk_i  : in    std_logic;
-      rst_i  : in    std_logic;
-      data_i : in    std_logic_vector(15 downto 0);
-      str_o  : out   std_logic_vector(79 downto 0)
+      clk_i     : in    std_logic;
+      rst_i     : in    std_logic;
+      s_ready_o : out   std_logic;
+      s_valid_i : in    std_logic;
+      s_data_i  : in    std_logic_vector(15 downto 0);
+      m_ready_i : in    std_logic;
+      m_valid_o : out   std_logic;
+      m_str_o   : out   std_logic_vector(79 downto 0)
    );
 end entity slv2str;
 
@@ -30,9 +34,9 @@ begin
       port map (
          clk_i     => clk_i,
          rst_i     => rst_i,
-         s_valid_i => '1',
-         s_ready_o => open,
-         s_data_i  => data_i,
+         s_ready_o => s_ready_o,
+         s_valid_i => s_valid_i,
+         s_data_i  => s_data_i,
          m_valid_o => dec_valid,
          m_ready_i => dec_ready,
          m_data_o  => dec_data,
@@ -45,14 +49,24 @@ begin
       variable tmp_v : std_logic_vector(79 downto 0);
    begin
       if rising_edge(clk_i) then
+         if m_ready_i = '1' then
+            m_valid_o <= '0';
+         end if;
+
          if dec_valid then
             -- Most significant digit is presented first,
             -- which is then shifted right.
             tmp_v := "0011" & dec_data & tmp_v(79 downto 8);
             if dec_last then
-               str_o <= tmp_v;
-               tmp_v := X"20202020202020202020";
+               m_str_o   <= tmp_v;
+               m_valid_o <= '1';
+               tmp_v     := X"20202020202020202020";
             end if;
+         end if;
+
+         if rst_i = '1' then
+            tmp_v     := X"20202020202020202020";
+            m_valid_o <= '0';
          end if;
       end if;
    end process str_proc;

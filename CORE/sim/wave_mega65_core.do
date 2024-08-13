@@ -81,42 +81,6 @@ add wave -noupdate -group video_board /tb_mega65_core/mega65_core_inst/video_wra
 add wave -noupdate -group video_board /tb_mega65_core/mega65_core_inst/video_wrapper_inst/video_board_inst/video_data_i
 add wave -noupdate -group video_board /tb_mega65_core/mega65_core_inst/video_wrapper_inst/video_board_inst/video_char_o
 add wave -noupdate -group video_board /tb_mega65_core/mega65_core_inst/video_wrapper_inst/video_board_inst/video_colors_o
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_clk_i
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_rst_i
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_kb_key_num_i
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_kb_key_pressed_n_i
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/uart_tx_o
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/uart_rx_i
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_init_density_i
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_init_border_i
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_generational_speed_i
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_life_ready_i
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_life_step_o
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_bottom_o
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_life_start_row_o
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_life_start_col_o
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_life_addr_i
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_life_rd_data_o
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_life_wr_data_i
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_life_wr_en_i
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_board_addr_o
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_board_rd_data_i
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_board_wr_data_o
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_board_wr_en_o
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_key_num
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_uart_rx_ready
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_uart_rx_valid
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_uart_rx_data
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_uart_tx_ready
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_uart_tx_valid
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_uart_tx_data
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_cmd_ready
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_cmd_valid
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_cmd_data
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_controller_busy
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_controller_addr
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_controller_wr_data
-add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_controller_wr_en
 add wave -noupdate -group controller /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/controller_inst/clk_i
 add wave -noupdate -group controller /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/controller_inst/rst_i
 add wave -noupdate -group controller /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/controller_inst/cmd_valid_i
@@ -130,6 +94,8 @@ add wave -noupdate -group controller /tb_mega65_core/mega65_core_inst/controller
 add wave -noupdate -group controller /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/controller_inst/generational_speed_i
 add wave -noupdate -group controller /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/controller_inst/ready_i
 add wave -noupdate -group controller /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/controller_inst/step_o
+add wave -noupdate -group controller /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/controller_inst/gens_o
+add wave -noupdate -group controller /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/controller_inst/main_bottom_i
 add wave -noupdate -group controller /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/controller_inst/board_busy_o
 add wave -noupdate -group controller /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/controller_inst/board_addr_o
 add wave -noupdate -group controller /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/controller_inst/board_rd_data_i
@@ -152,7 +118,6 @@ add wave -noupdate -group statistics /tb_mega65_core/mega65_core_inst/controller
 add wave -noupdate -group statistics /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/statistics_inst/addr_i
 add wave -noupdate -group statistics /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/statistics_inst/wr_data_i
 add wave -noupdate -group statistics /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/statistics_inst/wr_en_i
-add wave -noupdate -group statistics /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/statistics_inst/total_o
 add wave -noupdate -group statistics /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/statistics_inst/stage1_wr_en
 add wave -noupdate -group statistics /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/statistics_inst/stage1_first_row
 add wave -noupdate -group statistics /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/statistics_inst/stage1_last_row
@@ -164,6 +129,52 @@ add wave -noupdate -group statistics /tb_mega65_core/mega65_core_inst/controller
 add wave -noupdate -group statistics /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/statistics_inst/stage3_wr_en
 add wave -noupdate -group statistics /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/statistics_inst/stage3_last_row
 add wave -noupdate -group statistics /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/statistics_inst/total
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_clk_i
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_rst_i
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_kb_key_num_i
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_kb_key_pressed_n_i
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/uart_tx_o
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/uart_rx_i
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_init_density_i
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_init_border_i
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_generational_speed_i
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_life_ready_i
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_life_step_o
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_bottom_o
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_life_start_row_o
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_life_start_col_o
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_life_addr_i
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_life_rd_data_o
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_life_wr_data_i
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_life_wr_en_i
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_board_addr_o
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_board_rd_data_i
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_board_wr_data_o
+add wave -noupdate -expand -group controller_wrapper /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_board_wr_en_o
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_key_state
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_key_timer
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_key_num
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_key_valid
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_uart_rx_ready
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_uart_rx_valid
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_uart_rx_data
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_uart_tx_ready
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_uart_tx_valid
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_uart_tx_data
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_cmd_ready
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_cmd_valid
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_cmd_data
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_controller_busy
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_controller_addr
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_controller_wr_data
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_controller_wr_en
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_life_gens
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_stat_ready
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_stat_valid
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_stat_data
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_bottom
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_bottom_ready
+add wave -noupdate -expand -group controller_wrapper -group Internal /tb_mega65_core/mega65_core_inst/controller_wrapper_inst/main_bottom_valid
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {3992000000 fs} 0}
 quietly wave cursor active 1
@@ -181,4 +192,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {499434753688 fs} {514643570859 fs}
+WaveRestoreZoom {0 fs} {226634437216 fs}

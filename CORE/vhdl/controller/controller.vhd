@@ -150,58 +150,58 @@ begin
             when IDLE_ST =>
                if cmd_valid_i = '1' then
 
-                  case to_integer(cmd_data_i) is
+                  case character'val(to_integer(cmd_data_i)) is
 
-                     when character'pos('D') =>
+                     when 'D' =>
                         if start_row_o > 0 then
                            start_row_o <= start_row_o - 1;
                         else
                            start_row_o <= G_ROWS - 1;
                         end if;
 
-                     when character'pos('U') =>
+                     when 'U' =>
                         if start_row_o < G_ROWS - 1 then
                            start_row_o <= start_row_o + 1;
                         else
                            start_row_o <= 0;
                         end if;
 
-                     when character'pos('R') =>
+                     when 'R' =>
                         if start_col_o > 0 then
                            start_col_o <= start_col_o - 1;
                         else
                            start_col_o <= G_COLS - 1;
                         end if;
 
-                     when character'pos('L') =>
+                     when 'L' =>
                         if start_col_o < G_COLS - 1 then
                            start_col_o <= start_col_o + 1;
                         else
                            start_col_o <= 0;
                         end if;
 
-                     when character'pos('C') =>
+                     when 'C' =>
                         continuous_mode <= not continuous_mode;
 
-                     when character'pos('I') =>
+                     when 'I' =>
                         cur_col         <= 0;
                         cur_row         <= 0;
                         gens_o          <= (others => '0');
                         continuous_mode <= '0';
                         state           <= INIT_ST;
 
-                     when character'pos('P') =>
+                     when 'P' =>
                         cur_col      <= 0;
                         cur_row      <= 0;
                         wait_for_ram <= '1';
                         state        <= PRINTING_ST;
 
-                     when character'pos('S') =>
+                     when 'S' =>
                         step_o          <= '1';
                         gens_o          <= gens_o + 1;
                         continuous_mode <= '0';
 
-                     when character'pos(' ') =>
+                     when ' ' =>
                         continuous_mode <= '0';
 
                      when others =>
@@ -224,7 +224,6 @@ begin
                            uart_tx_data_o <= X"30" + cell_v;
                         end if;
                         cur_col      <= cur_col + 1;
-                        wait_for_ram <= '1';
                      elsif cur_col = G_COLS then
                         uart_tx_data_o <= X"0D";
                         cur_col        <= cur_col + 1;
@@ -232,6 +231,7 @@ begin
                         uart_tx_data_o <= X"0A";
                         cur_col        <= 0;
                         cur_row        <= cur_row + 1;
+                        wait_for_ram   <= '1';
                      end if;
                      uart_tx_valid_o <= '1';
                   elsif cur_row = G_ROWS then

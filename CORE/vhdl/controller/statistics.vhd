@@ -15,7 +15,9 @@ entity statistics is
       addr_i    : in    std_logic_vector(9 downto 0);
       wr_data_i : in    std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
       wr_en_i   : in    std_logic;
-      total_o   : out   std_logic_vector(16 * G_STAT_SIZE - 1 downto 0)
+      m_ready_i : in    std_logic;
+      m_valid_o : out   std_logic;
+      m_data_o  : out   std_logic_vector(16 * G_STAT_SIZE - 1 downto 0)
    );
 end entity statistics;
 
@@ -140,12 +142,16 @@ begin
    stage4_proc : process (clk_i)
    begin
       if rising_edge(clk_i) then
+         if m_ready_i = '1' then
+            m_valid_o <= '0';
+         end if;
          if stage3_last_row = '1' then
-            total_o <= total;
+            m_data_o  <= total;
+            m_valid_o <= '1';
          end if;
 
          if rst_i = '1' then
-            total_o <= (others => '0');
+            m_valid_o <= '0';
          end if;
       end if;
    end process stage4_proc;
