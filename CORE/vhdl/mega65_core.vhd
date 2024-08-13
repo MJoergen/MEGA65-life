@@ -22,6 +22,7 @@ entity mega65_core is
       G_FONT_PATH     : string  := "";
       G_UART_BAUDRATE : natural := 115_200;
       G_CELL_BITS     : integer := 3;
+      G_STAT_SIZE     : integer := 4;
       G_COLS          : integer := 160;
       G_ROWS          : integer := 89;
       G_BOARD         : string -- Which platform are we running on.
@@ -254,7 +255,7 @@ architecture synthesis of mega65_core is
    signal   main_life_wr_data       : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
    signal   main_life_wr_en         : std_logic;
    signal   main_life_gens          : std_logic_vector(15 downto 0);
-   signal   main_life_count         : std_logic_vector(15 downto 0);
+   signal   main_life_stat          : std_logic_vector(16 * G_STAT_SIZE - 1 downto 0);
    signal   main_life_start_row     : natural range 0 to G_ROWS - 1;
    signal   main_life_start_col     : natural range 0 to G_COLS - 1;
    signal   main_init_density       : natural range 0 to 100;
@@ -266,8 +267,11 @@ architecture synthesis of mega65_core is
    signal   main_tdp_wr_data : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
    signal   main_tdp_wr_en   : std_logic;
 
+   signal   main_cdc_data  : std_logic_vector(47 + 16 * G_STAT_SIZE downto 0);
+   signal   video_cdc_data : std_logic_vector(47 + 16 * G_STAT_SIZE downto 0);
+
    signal   video_gens      : std_logic_vector(15 downto 0);
-   signal   video_count     : std_logic_vector(15 downto 0);
+   signal   video_stat      : std_logic_vector(16 * G_STAT_SIZE - 1 downto 0);
    signal   video_start_row : std_logic_vector(15 downto 0);
    signal   video_start_col : std_logic_vector(15 downto 0);
    signal   video_mem_addr  : std_logic_vector(9 downto 0);
@@ -362,6 +366,7 @@ begin
          G_MAIN_CLK_HZ   => CORE_CLK_SPEED,
          G_UART_BAUDRATE => G_UART_BAUDRATE,
          G_CELL_BITS     => G_CELL_BITS,
+         G_STAT_SIZE     => G_STAT_SIZE,
          G_ROWS          => G_ROWS,
          G_COLS          => G_COLS
       )
@@ -382,7 +387,7 @@ begin
          main_life_wr_data_i       => main_life_wr_data,
          main_life_wr_en_i         => main_life_wr_en,
          main_life_gens_o          => main_life_gens,
-         main_life_count_o         => main_life_count,
+         main_life_stat_o          => main_life_stat,
          main_life_start_row_o     => main_life_start_row,
          main_life_start_col_o     => main_life_start_col,
          main_board_addr_o         => main_tdp_addr,
@@ -423,21 +428,30 @@ begin
    -- Video output
    ---------------------------------------------------------------------------------------------
 
+   main_cdc_data         <=
+   (
+      main_life_stat,
+      main_life_gens,
+      std_logic_vector(to_unsigned(main_life_start_col,
+                                     16)),
+      std_logic_vector(to_unsigned(main_life_start_row,
+                                     16))
+   );
+
+   (video_stat,
+   video_gens,
+   video_start_col,
+   video_start_row) <= video_cdc_data;
+
    xpm_cdc_array_single_inst : component xpm_cdc_array_single
       generic map (
-         WIDTH => 64
+         WIDTH => 48 + 16 * G_STAT_SIZE
       )
       port map (
-         src_clk                => main_clk_o,
-         src_in(15 downto 0)    => main_life_count,
-         src_in(31 downto 16)   => main_life_gens,
-         src_in(47 downto 32)   => std_logic_vector(to_unsigned(main_life_start_row, 16)),
-         src_in(63 downto 48)   => std_logic_vector(to_unsigned(main_life_start_col, 16)),
-         dest_clk               => video_clk_o,
-         dest_out(15 downto 0)  => video_count,
-         dest_out(31 downto 16) => video_gens,
-         dest_out(47 downto 32) => video_start_row,
-         dest_out(63 downto 48) => video_start_col
+         src_clk  => main_clk_o,
+         src_in   => main_cdc_data,
+         dest_clk => video_clk_o,
+         dest_out => video_cdc_data
       ); -- xpm_cdc_array_single_inst
 
    video_wrapper_inst : entity work.video_wrapper
@@ -445,6 +459,7 @@ begin
          G_VIDEO_MODE => C_VIDEO_MODE,
          G_FONT_PATH  => G_FONT_PATH,
          G_CELL_BITS  => G_CELL_BITS,
+         G_STAT_SIZE  => G_STAT_SIZE,
          G_ROWS       => G_ROWS,
          G_COLS       => G_COLS
       )
@@ -454,7 +469,7 @@ begin
          video_addr_o      => video_mem_addr,
          video_data_i      => video_mem_data,
          video_gens_i      => video_gens,
-         video_count_i     => video_count,
+         video_stat_i      => video_stat,
          video_start_row_i => to_integer(unsigned(video_start_row)),
          video_start_col_i => to_integer(unsigned(video_start_col)),
          video_ce_o        => video_ce_o,

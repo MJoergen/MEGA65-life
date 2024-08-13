@@ -10,13 +10,14 @@ entity video_wrapper is
       G_VIDEO_MODE : video_modes_t;
       G_FONT_PATH  : string := "";
       G_CELL_BITS  : integer;
+      G_STAT_SIZE  : integer;
       G_ROWS       : integer;
       G_COLS       : integer
    );
    port (
       video_clk_i       : in    std_logic;
       video_rst_i       : in    std_logic;
-      video_count_i     : in    std_logic_vector(15 downto 0);
+      video_stat_i      : in    std_logic_vector(16 * G_STAT_SIZE - 1 downto 0);
       video_gens_i      : in    std_logic_vector(15 downto 0);
       video_start_row_i : in    natural range 0 to G_ROWS - 1;
       video_start_col_i : in    natural range 0 to G_COLS - 1;
@@ -47,20 +48,21 @@ begin
       generic map (
          G_VIDEO_MODE => G_VIDEO_MODE,
          G_CELL_BITS  => G_CELL_BITS,
+         G_STAT_SIZE  => G_STAT_SIZE,
          G_ROWS       => G_ROWS,
          G_COLS       => G_COLS
       )
       port map (
          video_clk_i       => video_clk_i,
          video_rst_i       => video_rst_i,
-         video_count_i     => video_count_i,
+         video_stat_i      => video_stat_i,
          video_gens_i      => video_gens_i,
          video_start_row_i => video_start_row_i,
          video_start_col_i => video_start_col_i,
          video_addr_o      => video_addr_o,
          video_data_i      => video_data_i,
-         video_x_i      => video_x,
-         video_y_i      => video_y,
+         video_x_i         => video_x,
+         video_y_i         => video_y,
          video_char_o      => video_char,
          video_colors_o    => video_colors
       ); -- video_board_inst

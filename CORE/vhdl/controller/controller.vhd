@@ -47,6 +47,7 @@ architecture synthesis of controller is
 
    signal   rand_output               : std_logic_vector(127 downto 0);
    signal   rand7                     : std_logic_vector(6 downto 0);
+   signal   random_bit                : std_logic;
    signal   init_rand7_cutoff         : std_logic_vector(6 downto 0);
    signal   init_border_cutoff_prelim : natural range 0 to G_COLS * 50;
    signal   init_border_cutoff        : natural range 0 to G_COLS / 2;
@@ -105,6 +106,7 @@ begin
          -- Use two clock cycles
          init_border_cutoff_prelim <= init_border_i * G_COLS;
          init_border_cutoff        <= init_border_cutoff_prelim / 100;
+         random_bit                <= to_stdlogic(rand7 < init_rand7_cutoff);
 
          if ready_i = '1' then
             step_o <= step and continuous_mode;
@@ -127,7 +129,7 @@ begin
                   end if;
                end if;
 
-               cell_v := (others => to_stdlogic(rand7 < init_rand7_cutoff));
+               cell_v := (others => random_bit);
                if cur_col < init_border_cutoff or cur_col + init_border_cutoff >= G_COLS then
                   cell_v := (others => '0');
                end if;

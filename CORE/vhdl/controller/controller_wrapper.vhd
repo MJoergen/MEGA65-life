@@ -15,6 +15,7 @@ entity controller_wrapper is
       G_MAIN_CLK_HZ   : natural;
       G_UART_BAUDRATE : natural;
       G_CELL_BITS     : natural;
+      G_STAT_SIZE     : natural;
       G_ROWS          : integer;
       G_COLS          : integer
    );
@@ -31,7 +32,7 @@ entity controller_wrapper is
       main_life_ready_i         : in    std_logic;
       main_life_step_o          : out   std_logic;
       main_life_gens_o          : out   std_logic_vector(15 downto 0);
-      main_life_count_o         : out   std_logic_vector(15 downto 0);
+      main_life_stat_o          : out   std_logic_vector(16 * G_STAT_SIZE - 1 downto 0);
       main_life_start_row_o     : out   natural range 0 to G_ROWS - 1;
       main_life_start_col_o     : out   natural range 0 to G_COLS - 1;
       main_life_addr_i          : in    std_logic_vector(9 downto 0);
@@ -149,14 +150,6 @@ architecture synthesis of controller_wrapper is
    signal   main_controller_wr_data : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
    signal   main_controller_wr_en   : std_logic;
 
-   signal   main_row_cells_up    : std_logic_vector(G_COLS - 1 downto 0);
-   signal   main_row_cells_down  : std_logic_vector(G_COLS - 1 downto 0);
-   signal   main_board_wr_en_d   : std_logic;
-   signal   main_cell_count_up   : std_logic_vector(15 downto 0) := (others => '0');
-   signal   main_cell_count_down : std_logic_vector(15 downto 0) := (others => '0');
-   signal   main_cell_count      : std_logic_vector(15 downto 0) := (others => '0');
-   signal   main_life_ready_d3   : std_logic;
-
 begin
 
    main_board_addr_o    <= main_controller_addr when main_controller_busy = '1' else
@@ -179,7 +172,7 @@ begin
                if main_kb_key_pressed_n_i = '0' then
                   main_key_num   <= main_kb_key_num_i;
                   main_key_valid <= '1';
-                  main_key_timer <= G_MAIN_CLK_HZ;
+                  main_key_timer <= G_MAIN_CLK_HZ / 2;
                   main_key_state <= DOWN_ST;
                end if;
 
@@ -188,7 +181,7 @@ begin
                if main_kb_key_pressed_n_i = '0' and main_key_num /= main_kb_key_num_i then
                   main_key_num   <= main_kb_key_num_i;
                   main_key_valid <= '1';
-                  main_key_timer <= G_MAIN_CLK_HZ;
+                  main_key_timer <= G_MAIN_CLK_HZ / 2;
                end if;
 
                -- The key is released
@@ -200,7 +193,7 @@ begin
                      main_key_timer <= main_key_timer - 1;
                   else
                      main_key_valid <= '1';
-                     main_key_timer <= G_MAIN_CLK_HZ / 5;
+                     main_key_timer <= G_MAIN_CLK_HZ / 10;
                   end if;
                end if;
 
@@ -208,7 +201,7 @@ begin
 
          if main_rst_i = '1' then
             main_key_state <= UP_ST;
-            main_key_timer <= G_MAIN_CLK_HZ;
+            main_key_timer <= G_MAIN_CLK_HZ / 2;
             main_key_num   <= C_M65_NONE;
             main_key_valid <= '0';
          end if;
@@ -377,88 +370,22 @@ begin
          board_wr_en_o        => main_controller_wr_en
       ); -- controller_inst
 
-   shift_registers_inst : entity work.shift_registers
+
+   statistics_inst : entity work.statistics
       generic map (
-         G_DATA_SIZE => 1,
-         G_DEPTH     => 3
+         G_CELL_BITS => G_CELL_BITS,
+         G_STAT_SIZE => G_STAT_SIZE,
+         G_ROWS      => G_ROWS,
+         G_COLS      => G_COLS
       )
       port map (
          clk_i     => main_clk_i,
-         clken_i   => '1',
-         data_i(0) => main_life_ready_i,
-         data_o(0) => main_life_ready_d3
-      ); -- shift_registers_inst
-
-   main_cell_count_proc : process (main_clk_i)
-      --
-
-      pure function get_row_cells (
-         arg : std_logic_vector
-      ) return std_logic_vector is
-         variable res_v  : std_logic_vector(G_COLS - 1 downto 0);
-         variable cell_v : std_logic_vector(G_CELL_BITS - 1 downto 0);
-      begin
-         --
-         for i in 0 to G_COLS - 1 loop
-            cell_v   := arg((i + 1) * G_CELL_BITS - 1 downto i * G_CELL_BITS);
-            res_v(i) := or(cell_v);
-         end loop;
-
-         return res_v;
-      end function get_row_cells;
-
-      pure function count_ones (
-         arg : std_logic_vector
-      ) return natural is
-         variable res_v : natural range 0 to arg'length;
-      begin
-         res_v := 0;
-
-         for i in arg'range loop
-            if arg(i) = '1' then
-               res_v := res_v + 1;
-            end if;
-         end loop;
-
-         return res_v;
-      end function count_ones;
-
-   --
-   begin
-      if rising_edge(main_clk_i) then
-         -- This calculation is pipelined to improve timing.
-         main_board_wr_en_d   <= main_board_wr_en_o;
-         main_cell_count_up   <= (others => '0');
-         main_cell_count_down <= (others => '0');
-         main_row_cells_up    <= (others => '0');
-         main_row_cells_down  <= (others => '0');
-
-         -- Stage 1 : Get new and old row
-
-         if main_board_wr_en_o = '1' then
-            main_row_cells_up <= get_row_cells(main_board_wr_data_o);
-         end if;
-
-         if main_board_wr_en_d = '1' then
-            main_row_cells_down <= get_row_cells(main_board_rd_data_i);
-         end if;
-
-         -- Stage 2 : Count number of cells in roe
-
-         main_cell_count_up   <= to_stdlogicvector(count_ones(main_row_cells_up), 16);
-         main_cell_count_down <= to_stdlogicvector(count_ones(main_row_cells_down), 16);
-
-         -- Stage 3 : Update total count
-
-         main_cell_count      <= main_cell_count + main_cell_count_up - main_cell_count_down;
-
-         -- Store total when engine is idle
-         if main_life_ready_d3 = '1' then
-            main_life_count_o <= main_cell_count;
-         end if;
-      end if;
-   end process main_cell_count_proc;
-
+         rst_i     => main_rst_i,
+         addr_i    => main_board_addr_o,
+         wr_data_i => main_board_wr_data_o,
+         wr_en_i   => main_board_wr_en_o,
+         total_o   => main_life_stat_o
+      ); -- statistics_inst
 
 end architecture synthesis;
 

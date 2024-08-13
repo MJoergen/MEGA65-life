@@ -8,6 +8,8 @@ SRCS += ../vhdl/clk.vhd
 SRCS += ../vhdl/globals.vhd
 SRCS += ../vhdl/life.vhd
 SRCS += ../vhdl/video/shift_registers.vhd
+SRCS += ../vhdl/controller/count_ones.vhd
+SRCS += ../vhdl/controller/statistics.vhd
 SRCS += ../vhdl/controller/lfsr.vhd
 SRCS += ../vhdl/controller/random.vhd
 SRCS += ../vhdl/controller/controller.vhd
@@ -15,17 +17,20 @@ SRCS += ../vhdl/controller/controller_wrapper.vhd
 SRCS += ../vhdl/video/font.vhd
 SRCS += ../vhdl/video/divexact.vhd
 SRCS += ../vhdl/video/slv_to_dec.vhd
+SRCS += ../vhdl/video/slv2str.vhd
 SRCS += ../vhdl/video/vga_chars.vhd
 SRCS += ../vhdl/video/video_text_mode.vhd
 SRCS += ../vhdl/video/video_board.vhd
 SRCS += ../vhdl/video/video_wrapper.vhd
 SRCS += ../vhdl/mega65_core.vhd
 SRCS += uart_dumper.vhd
+SRCS += tb_statistics.vhd
 SRCS += tb_life.vhd
 SRCS += tb_mega65_core.vhd
 
 TB = life
 TB = mega65_core
+#TB = statistics
 
 GENERICS += -gG_CELL_BITS=4
 GENERICS += -gG_ROWS=8
