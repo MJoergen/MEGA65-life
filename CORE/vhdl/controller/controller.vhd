@@ -5,6 +5,7 @@ library ieee;
 entity controller is
    generic (
       G_CELL_BITS : integer;
+      G_STAT_SIZE : integer;
       G_ROWS      : integer;
       G_COLS      : integer
    );
@@ -22,7 +23,8 @@ entity controller is
       generational_speed_i : in    natural range 0 to 31;
       ready_i              : in    std_logic;
       step_o               : out   std_logic;
-      count_o              : out   std_logic_vector(15 downto 0);
+      gens_o               : out   std_logic_vector(15 downto 0);
+      main_bottom_i        : in    std_logic_vector(80 * (G_STAT_SIZE + 1) - 1 downto 0);
       start_row_o          : out   natural range 0 to G_ROWS - 1;
       start_col_o          : out   natural range 0 to G_COLS - 1;
       board_busy_o         : out   std_logic;
@@ -111,7 +113,7 @@ begin
          if ready_i = '1' then
             step_o <= step and continuous_mode;
             if (step and continuous_mode) = '1' then
-               count_o <= count_o + 1;
+               gens_o <= gens_o + 1;
             end if;
          end if;
          if uart_tx_ready_i = '1' then
@@ -184,7 +186,7 @@ begin
                      when character'pos('I') =>
                         cur_col         <= 0;
                         cur_row         <= 0;
-                        count_o         <= (others => '0');
+                        gens_o          <= (others => '0');
                         continuous_mode <= '0';
                         state           <= INIT_ST;
 
@@ -196,7 +198,7 @@ begin
 
                      when character'pos('S') =>
                         step_o          <= '1';
-                        count_o         <= count_o + 1;
+                        gens_o          <= gens_o + 1;
                         continuous_mode <= '0';
 
                      when character'pos(' ') =>
@@ -212,32 +214,40 @@ begin
             when PRINTING_ST =>
                wait_for_ram <= '0';
                if uart_tx_ready_i = '1' and wait_for_ram = '0' then
-                  if cur_col < G_COLS and cur_row < G_ROWS then
-                     cell_v := board_rd_data_i((cur_col + 1) * G_CELL_BITS - 1 downto cur_col * G_CELL_BITS);
-                     if cell_v = 0 then
-                        uart_tx_data_o <= X"2E";
-                     else
-                        uart_tx_data_o <= X"30" + cell_v;
-                     end if;
-                  else
-                     if cur_col = G_COLS then
+                  if cur_row < G_ROWS then
+                     -- print board
+                     if cur_col < G_COLS then
+                        cell_v := board_rd_data_i((cur_col + 1) * G_CELL_BITS - 1 downto cur_col * G_CELL_BITS);
+                        if cell_v = 0 then
+                           uart_tx_data_o <= X"2E";
+                        else
+                           uart_tx_data_o <= X"30" + cell_v;
+                        end if;
+                        cur_col      <= cur_col + 1;
+                        wait_for_ram <= '1';
+                     elsif cur_col = G_COLS then
                         uart_tx_data_o <= X"0D";
+                        cur_col        <= cur_col + 1;
                      else
                         uart_tx_data_o <= X"0A";
+                        cur_col        <= 0;
+                        cur_row        <= cur_row + 1;
                      end if;
-                  end if;
-                  uart_tx_valid_o <= '1';
-
-                  if cur_col < G_COLS + 1 and cur_row < G_ROWS then
-                     cur_col      <= cur_col + 1;
-                     wait_for_ram <= '1';
-                  else
-                     cur_col <= 0;
-                     if cur_row < G_ROWS then
-                        cur_row <= cur_row + 1;
+                     uart_tx_valid_o <= '1';
+                  elsif cur_row = G_ROWS then
+                     -- print bottom row
+                     if cur_col < 10 * (G_STAT_SIZE + 1) then
+                        uart_tx_data_o <= main_bottom_i(8 * cur_col + 7 downto 8 * cur_col);
+                        cur_col        <= cur_col + 1;
+                     elsif cur_col = 10 * (G_STAT_SIZE + 1) then
+                        uart_tx_data_o <= X"0D";
+                        cur_col        <= cur_col + 1;
                      else
-                        state <= IDLE_ST;
+                        uart_tx_data_o <= X"0A";
+                        cur_col        <= 0;
+                        state          <= IDLE_ST;
                      end if;
+                     uart_tx_valid_o <= '1';
                   end if;
                end if;
 
@@ -249,7 +259,7 @@ begin
             cur_row         <= 0;
             cur_col         <= 0;
             state           <= INIT_ST;
-            count_o         <= (others => '0');
+            gens_o          <= (others => '0');
             start_row_o     <= 0;
             start_col_o     <= 0;
          end if;

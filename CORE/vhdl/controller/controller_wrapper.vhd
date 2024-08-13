@@ -31,8 +31,7 @@ entity controller_wrapper is
       main_generational_speed_i : in    natural range 0 to 31;
       main_life_ready_i         : in    std_logic;
       main_life_step_o          : out   std_logic;
-      main_life_gens_o          : out   std_logic_vector(15 downto 0);
-      main_life_stat_o          : out   std_logic_vector(16 * G_STAT_SIZE - 1 downto 0);
+      main_bottom_o             : out   std_logic_vector(80 * (G_STAT_SIZE + 1) - 1 downto 0);
       main_life_start_row_o     : out   natural range 0 to G_ROWS - 1;
       main_life_start_col_o     : out   natural range 0 to G_COLS - 1;
       main_life_addr_i          : in    std_logic_vector(9 downto 0);
@@ -149,6 +148,11 @@ architecture synthesis of controller_wrapper is
    signal   main_controller_addr    : std_logic_vector(9 downto 0);
    signal   main_controller_wr_data : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
    signal   main_controller_wr_en   : std_logic;
+
+   signal   main_life_gens : std_logic_vector(15 downto 0);
+   signal   main_life_stat : std_logic_vector(16 * G_STAT_SIZE - 1 downto 0);
+
+   signal   main_bottom : std_logic_vector(80 * (G_STAT_SIZE + 1) - 1 downto 0);
 
 begin
 
@@ -343,6 +347,7 @@ begin
    controller_inst : entity work.controller
       generic map (
          G_CELL_BITS => G_CELL_BITS,
+         G_STAT_SIZE => G_STAT_SIZE,
          G_ROWS      => G_ROWS,
          G_COLS      => G_COLS
       )
@@ -360,7 +365,8 @@ begin
          generational_speed_i => main_generational_speed_i,
          ready_i              => main_life_ready_i,
          step_o               => main_life_step_o,
-         count_o              => main_life_gens_o,
+         gens_o               => main_life_gens,
+         main_bottom_i        => main_bottom,
          start_row_o          => main_life_start_row_o,
          start_col_o          => main_life_start_col_o,
          board_busy_o         => main_controller_busy,
@@ -384,8 +390,30 @@ begin
          addr_i    => main_board_addr_o,
          wr_data_i => main_board_wr_data_o,
          wr_en_i   => main_board_wr_en_o,
-         total_o   => main_life_stat_o
+         total_o   => main_life_stat
       ); -- statistics_inst
+
+   slv2str_gens_inst : entity work.slv2str
+      port map (
+         clk_i  => main_clk_i,
+         rst_i  => main_rst_i,
+         data_i => main_life_gens,
+         str_o  => main_bottom(79 downto 0)
+      ); -- slv2str_gens_inst
+
+   stat_gen : for i in 0 to G_STAT_SIZE - 1 generate
+
+      slv2str_count_inst : entity work.slv2str
+         port map (
+            clk_i  => main_clk_i,
+            rst_i  => main_rst_i,
+            data_i => main_life_stat(16 * i + 15 downto 16 * i),
+            str_o  => main_bottom(80 * (i + 1) + 79 downto 80 * (i + 1))
+         ); -- slv2str_count_inst
+
+   end generate stat_gen;
+
+   main_bottom_o <= main_bottom;
 
 end architecture synthesis;
 

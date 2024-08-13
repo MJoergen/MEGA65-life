@@ -261,17 +261,14 @@ architecture synthesis of mega65_core is
    signal   main_init_density       : natural range 0 to 100;
    signal   main_init_border        : natural range 0 to 50;
    signal   main_generational_speed : natural range 0 to 31;
+   signal   main_bottom             : std_logic_vector(80 * (G_STAT_SIZE + 1) - 1 downto 0);
 
    signal   main_tdp_addr    : std_logic_vector(9 downto 0);
    signal   main_tdp_rd_data : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
    signal   main_tdp_wr_data : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
    signal   main_tdp_wr_en   : std_logic;
 
-   signal   main_cdc_data  : std_logic_vector(47 + 16 * G_STAT_SIZE downto 0);
-   signal   video_cdc_data : std_logic_vector(47 + 16 * G_STAT_SIZE downto 0);
-
-   signal   video_gens      : std_logic_vector(15 downto 0);
-   signal   video_stat      : std_logic_vector(16 * G_STAT_SIZE - 1 downto 0);
+   signal   video_bottom    : std_logic_vector(80 * (G_STAT_SIZE + 1) - 1 downto 0);
    signal   video_start_row : std_logic_vector(15 downto 0);
    signal   video_start_col : std_logic_vector(15 downto 0);
    signal   video_mem_addr  : std_logic_vector(9 downto 0);
@@ -386,10 +383,9 @@ begin
          main_life_rd_data_o       => main_life_rd_data,
          main_life_wr_data_i       => main_life_wr_data,
          main_life_wr_en_i         => main_life_wr_en,
-         main_life_gens_o          => main_life_gens,
-         main_life_stat_o          => main_life_stat,
          main_life_start_row_o     => main_life_start_row,
          main_life_start_col_o     => main_life_start_col,
+         main_bottom_o             => main_bottom,
          main_board_addr_o         => main_tdp_addr,
          main_board_rd_data_i      => main_tdp_rd_data,
          main_board_wr_data_o      => main_tdp_wr_data,
@@ -428,30 +424,16 @@ begin
    -- Video output
    ---------------------------------------------------------------------------------------------
 
-   main_cdc_data         <=
-   (
-      main_life_stat,
-      main_life_gens,
-      std_logic_vector(to_unsigned(main_life_start_col,
-                                     16)),
-      std_logic_vector(to_unsigned(main_life_start_row,
-                                     16))
-   );
-
-   (video_stat,
-   video_gens,
-   video_start_col,
-   video_start_row) <= video_cdc_data;
-
    xpm_cdc_array_single_inst : component xpm_cdc_array_single
       generic map (
-         WIDTH => 48 + 16 * G_STAT_SIZE
+         DEST_SYNC_FF => 2,
+         WIDTH        => 80 * (G_STAT_SIZE + 1)
       )
       port map (
          src_clk  => main_clk_o,
-         src_in   => main_cdc_data,
+         src_in   => main_bottom,
          dest_clk => video_clk_o,
-         dest_out => video_cdc_data
+         dest_out => video_bottom
       ); -- xpm_cdc_array_single_inst
 
    video_wrapper_inst : entity work.video_wrapper
@@ -468,8 +450,7 @@ begin
          video_rst_i       => video_rst_o,
          video_addr_o      => video_mem_addr,
          video_data_i      => video_mem_data,
-         video_gens_i      => video_gens,
-         video_stat_i      => video_stat,
+         video_bottom_i    => video_bottom,
          video_start_row_i => to_integer(unsigned(video_start_row)),
          video_start_col_i => to_integer(unsigned(video_start_col)),
          video_ce_o        => video_ce_o,

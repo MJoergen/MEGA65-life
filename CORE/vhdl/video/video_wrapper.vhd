@@ -17,8 +17,7 @@ entity video_wrapper is
    port (
       video_clk_i       : in    std_logic;
       video_rst_i       : in    std_logic;
-      video_stat_i      : in    std_logic_vector(16 * G_STAT_SIZE - 1 downto 0);
-      video_gens_i      : in    std_logic_vector(15 downto 0);
+      video_bottom_i    : in    std_logic_vector(80 * (G_STAT_SIZE + 1) - 1 downto 0);
       video_start_row_i : in    natural range 0 to G_ROWS - 1;
       video_start_col_i : in    natural range 0 to G_COLS - 1;
       video_addr_o      : out   std_logic_vector(9 downto 0);
@@ -55,8 +54,7 @@ begin
       port map (
          video_clk_i       => video_clk_i,
          video_rst_i       => video_rst_i,
-         video_stat_i      => video_stat_i,
-         video_gens_i      => video_gens_i,
+         video_bottom_i    => video_bottom_i,
          video_start_row_i => video_start_row_i,
          video_start_col_i => video_start_col_i,
          video_addr_o      => video_addr_o,

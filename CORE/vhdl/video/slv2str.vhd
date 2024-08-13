@@ -2,12 +2,15 @@ library ieee;
    use ieee.std_logic_1164.all;
    use ieee.numeric_std_unsigned.all;
 
+-- Convert an integer to a decimal string.
+-- The output string is right justified and padded with spaces.
+
 entity slv2str is
    port (
       clk_i  : in    std_logic;
       rst_i  : in    std_logic;
       data_i : in    std_logic_vector(15 downto 0);
-      str_o  : out   std_logic_vector(39 downto 0)
+      str_o  : out   std_logic_vector(79 downto 0)
    );
 end entity slv2str;
 
@@ -39,14 +42,16 @@ begin
    dec_ready <= '1';
 
    str_proc : process (clk_i)
-      variable tmp_v : std_logic_vector(39 downto 0);
+      variable tmp_v : std_logic_vector(79 downto 0);
    begin
       if rising_edge(clk_i) then
          if dec_valid then
-            tmp_v := "0011" & dec_data & tmp_v(39 downto 8);
+            -- Most significant digit is presented first,
+            -- which is then shifted right.
+            tmp_v := "0011" & dec_data & tmp_v(79 downto 8);
             if dec_last then
                str_o <= tmp_v;
-               tmp_v := X"2020202020";
+               tmp_v := X"20202020202020202020";
             end if;
          end if;
       end if;

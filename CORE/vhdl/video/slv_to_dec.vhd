@@ -99,6 +99,8 @@ begin
                      end if;
                      if pow_ten = C_ONE then
                         m_last_o <= '1';
+
+                        -- reset state machine
                         pow_ten  <= largest_pow_ten(G_DATA_SIZE);
                         state    <= IDLE_ST;
                      else
@@ -118,7 +120,6 @@ begin
          end case;
 
          if rst_i = '1' then
-            -- Initialize to one.
             pow_ten   <= largest_pow_ten(G_DATA_SIZE);
             state     <= IDLE_ST;
             m_valid_o <= '0';

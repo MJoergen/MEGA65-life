@@ -18,8 +18,7 @@ entity video_board is
       video_rst_i       : in    std_logic;
       video_x_i         : in    std_logic_vector(7 downto 0);
       video_y_i         : in    std_logic_vector(7 downto 0);
-      video_gens_i      : in    std_logic_vector(15 downto 0);
-      video_stat_i      : in    std_logic_vector(16 * G_STAT_SIZE - 1 downto 0);
+      video_bottom_i    : in    std_logic_vector(80 * (G_STAT_SIZE + 1) - 1 downto 0);
       video_start_row_i : in    natural range 0 to G_ROWS - 1;
       video_start_col_i : in    natural range 0 to G_COLS - 1;
       video_addr_o      : out   std_logic_vector(9 downto 0);
@@ -38,9 +37,6 @@ architecture synthesis of video_board is
 
    constant C_START_X : std_logic_vector(7 downto 0)     := to_stdlogicvector(G_VIDEO_MODE.H_PIXELS / 16 - (G_COLS + 1) / 2, 8);
    constant C_START_Y : std_logic_vector(7 downto 0)     := to_stdlogicvector(G_VIDEO_MODE.V_PIXELS / 16 - (G_ROWS + 1) / 2, 8);
-
-   signal   video_gens_str : std_logic_vector(39 downto 0);
-   signal   video_stat_str : std_logic_vector(40 * G_STAT_SIZE - 1 downto 0);
 
    signal   video_board_x : natural range 0 to G_COLS - 1;
    signal   video_board_y : natural range 0 to G_ROWS - 1;
@@ -72,17 +68,16 @@ begin
 
    char_proc : process (video_clk_i)
       variable video_dec_index_v : natural range 0 to 4;
-      variable col_v             : natural range 0 to G_COLS - 1;
       variable cell_v            : std_logic_vector(G_CELL_BITS - 1 downto 0);
    begin
       if rising_edge(video_clk_i) then
          video_colors_o <= C_PIXEL_GREY & C_PIXEL_GREY;
          video_char_o   <= X"20";
 
+         -- Display board
          if video_x_i >= C_START_X and video_x_i < C_START_X + G_COLS and
             video_y_i >= C_START_Y and video_y_i < C_START_Y + G_ROWS then
-            col_v  := video_board_x;
-            cell_v := video_data_i((col_v + 1) * G_CELL_BITS - 1 downto col_v * G_CELL_BITS);
+            cell_v := video_data_i((video_board_x + 1) * G_CELL_BITS - 1 downto video_board_x * G_CELL_BITS);
             if or (cell_v) = '1' then
                video_char_o <= X"58";
             else
@@ -90,52 +85,20 @@ begin
             end if;
             video_colors_o <= C_PIXEL_DARK & (C_PIXEL_LIGHT / (2 ** G_CELL_BITS - to_integer(cell_v)));
          end if;
-         if video_x_i >= C_START_X and video_x_i < C_START_X + 5 and
+
+         -- Display bottom line
+         if video_x_i >= C_START_X and video_x_i < C_START_X + 10 * (G_STAT_SIZE + 1) and
             video_y_i = C_START_Y + G_ROWS then
             video_dec_index_v := to_integer(video_x_i - C_START_X);
-            video_char_o      <= video_gens_str(8 * video_dec_index_v + 7 downto 8 * video_dec_index_v);
+            video_char_o      <= video_bottom_i(8 * video_dec_index_v + 7 downto 8 * video_dec_index_v);
             video_colors_o    <= C_PIXEL_DARK & C_PIXEL_LIGHT;
          end if;
-
-         for i in 0 to G_STAT_SIZE - 1 loop
-            if video_x_i >= C_START_X + 5 + 10 * i and video_x_i < C_START_X + 10 + 10 * i and
-               video_y_i = C_START_Y + G_ROWS then
-               video_colors_o <= C_PIXEL_DARK & C_PIXEL_LIGHT;
-            end if;
-            if video_x_i >= C_START_X + 10 + 10 * i and video_x_i < C_START_X + 15 + 10 * i and
-               video_y_i = C_START_Y + G_ROWS then
-               video_dec_index_v := to_integer(video_x_i - (C_START_X + 10 + 10 * i));
-               video_char_o      <= video_stat_str(8 * video_dec_index_v + 7 + 40 * i downto 8 * video_dec_index_v + 40 * i);
-               video_colors_o    <= C_PIXEL_DARK & C_PIXEL_LIGHT;
-            end if;
-         end loop;
-
-         if video_x_i >= C_START_X + 45 and video_x_i < C_START_X + G_COLS and
+         if video_x_i >= C_START_X + 10 * (G_STAT_SIZE + 1) and video_x_i < C_START_X + G_COLS and
             video_y_i = C_START_Y + G_ROWS then
             video_colors_o <= C_PIXEL_DARK & C_PIXEL_LIGHT;
          end if;
       end if;
    end process char_proc;
-
-   slv2str_gens_inst : entity work.slv2str
-      port map (
-         clk_i  => video_clk_i,
-         rst_i  => video_rst_i,
-         data_i => video_gens_i,
-         str_o  => video_gens_str
-      ); -- slv2str_gens_inst
-
-   stat_gen : for i in 0 to G_STAT_SIZE - 1 generate
-
-      slv2str_count_inst : entity work.slv2str
-         port map (
-            clk_i  => video_clk_i,
-            rst_i  => video_rst_i,
-            data_i => video_stat_i(16 * i + 15 downto 16 * i),
-            str_o  => video_stat_str(40 * i + 39 downto 40 * i)
-         ); -- slv2str_count_inst
-
-   end generate stat_gen;
 
 end architecture synthesis;
 

@@ -166,8 +166,8 @@ architecture structural of life is
    signal  rd_addr   : std_logic_vector(9 downto 0);
    signal  wr_addr   : std_logic_vector(9 downto 0);
    signal  row_first : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
+   signal  row_prev  : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
    signal  row_cur   : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
-   signal  row_next  : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
 
    pure function get_next_row (
       arg : ROW_TYPE
@@ -202,7 +202,7 @@ begin
    ram_proc : process (all)
       variable neighbour_count_v : COUNT_TYPE;
       variable rd_data_v         : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
-      variable cell_v            : std_logic_vector(G_CELL_BITS - 1 downto 0);
+      variable cur_cell_v        : std_logic_vector(G_CELL_BITS - 1 downto 0);
    begin
       -- Default values (read from RAM)
       wr_data_o <= (others => '0');
@@ -216,9 +216,9 @@ begin
          end if;
 
          for col in 0 to G_COLS - 1 loop
-            cell_v                                                          := row_next((col + 1) * G_CELL_BITS - 1 downto col * G_CELL_BITS);
-            neighbour_count_v                                               := count_ones(get_neighbours(row_cur, row_next, rd_data_v, col));
-            wr_data_o((col + 1) * G_CELL_BITS - 1 downto col * G_CELL_BITS) <= new_cell(neighbour_count_v, cell_v);
+            cur_cell_v                                                      := row_cur((col + 1) * G_CELL_BITS - 1 downto col * G_CELL_BITS);
+            neighbour_count_v                                               := count_ones(get_neighbours(row_prev, row_cur, rd_data_v, col));
+            wr_data_o((col + 1) * G_CELL_BITS - 1 downto col * G_CELL_BITS) <= new_cell(neighbour_count_v, cur_cell_v);
          end loop;
 
          addr_o  <= wr_addr;
@@ -244,16 +244,16 @@ begin
                state   <= READ_ROW_0_ST;
 
             when READ_ROW_0_ST =>
-               row_next <= rd_data_i;
-               rd_addr  <= to_stdlogicvector(1, 10);
-               state    <= READ_ROW_1_ST;
+               row_cur <= rd_data_i;
+               rd_addr <= to_stdlogicvector(1, 10);
+               state   <= READ_ROW_1_ST;
 
             when READ_ROW_1_ST =>
                -- Store row 0 for later use
                row_first <= rd_data_i;
 
-               row_cur   <= row_next;
-               row_next  <= rd_data_i;
+               row_prev  <= row_cur;
+               row_cur   <= rd_data_i;
                rd_addr   <= to_stdlogicvector(get_next_row(to_integer(rd_addr)), 10);
                wr_addr   <= to_stdlogicvector(get_prev_row(to_integer(rd_addr)), 10);
                state     <= WRITE_ROW_ST;
@@ -264,8 +264,8 @@ begin
                state   <= WRITE_ROW_ST;
 
             when WRITE_ROW_ST =>
-               row_cur  <= row_next;
-               row_next <= rd_data_i;
+               row_prev <= row_cur;
+               row_cur  <= rd_data_i;
                if wr_addr = G_ROWS - 1 then
                   state <= IDLE_ST;
                else
