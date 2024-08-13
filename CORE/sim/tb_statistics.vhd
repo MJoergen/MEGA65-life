@@ -75,6 +75,7 @@ begin
       wait until clk = '1';
       wait until clk = '1';
       wait until clk = '1';
+      wait until clk = '1';
       assert dut_total = X"0022_0018_001E_0050"
          report "Got: " & to_hstring(dut_total);
 

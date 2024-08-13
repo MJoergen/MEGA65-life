@@ -169,7 +169,7 @@ begin
          main_reset_m2m_i         => '0',
          main_reset_core_i        => '0',
          main_pause_core_i        => '0',
-         main_osm_control_i       => (5 => '1', 16 => '1', others => '0'),
+         main_osm_control_i       => (5 => '1', 20 => '1', others => '0'),
          main_qnice_gp_reg_i      => (others => '0'),
          main_audio_left_o        => open,
          main_audio_right_o       => open,

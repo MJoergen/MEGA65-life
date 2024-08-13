@@ -29,15 +29,19 @@ architecture synthesis of statistics is
    signal stage1_first_row      : std_logic;
    signal stage1_last_row       : std_logic;
    signal stage1_row_cells      : std_logic_vector(G_COLS - 1 downto 0);
-   signal stage1_cell_count_row : std_logic_vector(16 * G_STAT_SIZE - 1 downto 0);
 
    signal stage2_wr_en          : std_logic;
    signal stage2_first_row      : std_logic;
    signal stage2_last_row       : std_logic;
    signal stage2_cell_count_row : std_logic_vector(16 * G_STAT_SIZE - 1 downto 0);
 
-   signal stage3_wr_en    : std_logic;
-   signal stage3_last_row : std_logic;
+   signal stage3_wr_en          : std_logic;
+   signal stage3_first_row      : std_logic;
+   signal stage3_last_row       : std_logic;
+   signal stage3_cell_count_row : std_logic_vector(16 * G_STAT_SIZE - 1 downto 0);
+
+   signal stage4_wr_en    : std_logic;
+   signal stage4_last_row : std_logic;
 
    signal total : std_logic_vector(16 * G_STAT_SIZE - 1 downto 0);
 
@@ -98,7 +102,7 @@ begin
             clk_i   => clk_i,
             rst_i   => rst_i,
             data_i  => rotate(stage1_row_cells, i) and stage1_row_cells,
-            total_o => stage1_cell_count_row(i * 16 + 15 downto i * 16)
+            total_o => stage2_cell_count_row(i * 16 + 15 downto i * 16)
          ); -- count_ones_inst
 
    end generate count_ones_gen;
@@ -110,42 +114,52 @@ begin
          stage2_wr_en     <= stage1_wr_en;
          stage2_first_row <= stage1_first_row;
          stage2_last_row  <= stage1_last_row;
-
-         if stage1_wr_en = '1' then
-            stage2_cell_count_row <= stage1_cell_count_row;
-         end if;
       end if;
    end process stage2_proc;
 
-   -- Stage 3 : Update total count
+   -- Stage 3 : Count number of cells in row
    stage3_proc : process (clk_i)
    begin
       if rising_edge(clk_i) then
-         stage3_wr_en    <= stage2_wr_en;
-         stage3_last_row <= stage2_last_row;
+         stage3_wr_en     <= stage2_wr_en;
+         stage3_first_row <= stage2_first_row;
+         stage3_last_row  <= stage2_last_row;
 
          if stage2_wr_en = '1' then
-            if stage2_first_row = '1' then
-               total <= stage2_cell_count_row;
+            stage3_cell_count_row <= stage2_cell_count_row;
+         end if;
+      end if;
+   end process stage3_proc;
+
+   -- Stage 4 : Update total count
+   stage4_proc : process (clk_i)
+   begin
+      if rising_edge(clk_i) then
+         stage4_wr_en    <= stage3_wr_en;
+         stage4_last_row <= stage3_last_row;
+
+         if stage3_wr_en = '1' then
+            if stage3_first_row = '1' then
+               total <= stage3_cell_count_row;
             else
 
                for i in 0 to G_STAT_SIZE - 1 loop
-                  total(i * 16 + 15 downto i * 16) <= total(i * 16 + 15 downto i * 16) + stage2_cell_count_row(i * 16 + 15 downto i * 16);
+                  total(i * 16 + 15 downto i * 16) <= total(i * 16 + 15 downto i * 16) + stage3_cell_count_row(i * 16 + 15 downto i * 16);
                end loop;
 
             end if;
          end if;
       end if;
-   end process stage3_proc;
+   end process stage4_proc;
 
-   -- Stage 4 : Update output
-   stage4_proc : process (clk_i)
+   -- Stage 5 : Update output
+   stage5_proc : process (clk_i)
    begin
       if rising_edge(clk_i) then
          if m_ready_i = '1' then
             m_valid_o <= '0';
          end if;
-         if stage3_last_row = '1' then
+         if stage4_last_row = '1' then
             m_data_o  <= total;
             m_valid_o <= '1';
          end if;
@@ -154,7 +168,7 @@ begin
             m_valid_o <= '0';
          end if;
       end if;
-   end process stage4_proc;
+   end process stage5_proc;
 
 end architecture synthesis;
 

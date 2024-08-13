@@ -44,15 +44,16 @@ architecture synthesis of controller is
    signal   state           : state_type                 := INIT_ST;
    signal   continuous_mode : std_logic;
 
-   signal   cur_col      : natural range 0 to G_COLS + 1;
-   signal   cur_row      : natural range 0 to G_ROWS;
-   signal   wait_for_ram : std_logic;
+   signal   cur_col         : natural range 0 to G_COLS + 1;
+   signal   cur_row         : natural range 0 to G_ROWS;
+   signal   wait_for_ram    : std_logic;
+   signal   board_rd_data_d : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
 
    signal   rand_output               : std_logic_vector(127 downto 0);
    signal   rand7                     : std_logic_vector(6 downto 0);
    signal   random_bit                : std_logic;
    signal   init_rand7_cutoff         : std_logic_vector(6 downto 0);
-   signal   init_border_cutoff_prelim : natural range 0 to G_COLS * 50;
+   signal   init_border_cutoff_prelim : natural range 0 to G_COLS * 64;
    signal   init_border_cutoff        : natural range 0 to G_COLS / 2;
 
    signal   step_counter : std_logic_vector(31 downto 0) := (others => '0');
@@ -107,8 +108,8 @@ begin
          step_counter              <= step_counter + 1;
          init_rand7_cutoff         <= to_stdlogicvector((init_density_i * 128) / 100, 7);
          -- Use two clock cycles
-         init_border_cutoff_prelim <= init_border_i * G_COLS;
-         init_border_cutoff        <= init_border_cutoff_prelim / 100;
+         init_border_cutoff_prelim <= init_border_i * ((G_COLS * 128) / 100);
+         init_border_cutoff        <= init_border_cutoff_prelim / 128;
          random_bit                <= to_stdlogic(rand7 < init_rand7_cutoff);
 
          if ready_i = '1' then
@@ -143,7 +144,8 @@ begin
                if cur_row < init_border_cutoff or cur_row + init_border_cutoff >= G_ROWS then
                   cell_v := (others => '0');
                end if;
-               board_wr_data_o((cur_col + 1) * G_CELL_BITS - 1 downto cur_col * G_CELL_BITS) <= cell_v;
+
+               board_wr_data_o <= board_wr_data_o((G_COLS - 1) * G_CELL_BITS - 1 downto 0) & cell_v;
 
                if cur_col < G_COLS - 1 then
                   cur_col <= cur_col + 1;
@@ -224,13 +226,19 @@ begin
                   if cur_row < G_ROWS then
                      -- print board
                      if cur_col < G_COLS then
-                        cell_v := board_rd_data_i((cur_col + 1) * G_CELL_BITS - 1 downto cur_col * G_CELL_BITS);
+                        if cur_col = 0 then
+                           board_rd_data_d(G_CELL_BITS * (G_COLS - 1) - 1 downto 0) <= board_rd_data_i(G_CELL_BITS * G_COLS - 1 downto G_CELL_BITS);
+                           cell_v                                                   := board_rd_data_i(G_CELL_BITS - 1 downto 0);
+                        else
+                           board_rd_data_d(G_CELL_BITS * (G_COLS - 1) - 1 downto 0) <= board_rd_data_d(G_CELL_BITS * G_COLS - 1 downto G_CELL_BITS);
+                           cell_v                                                   := board_rd_data_d(G_CELL_BITS - 1 downto 0);
+                        end if;
                         if cell_v = 0 then
                            uart_tx_data_o <= X"2E";
                         else
                            uart_tx_data_o <= X"30" + cell_v;
                         end if;
-                        cur_col      <= cur_col + 1;
+                        cur_col <= cur_col + 1;
                      elsif cur_col = G_COLS then
                         uart_tx_data_o <= X"0D";
                         cur_col        <= cur_col + 1;
