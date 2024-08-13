@@ -24,6 +24,7 @@ entity controller is
       ready_i              : in    std_logic;
       step_o               : out   std_logic;
       gens_o               : out   std_logic_vector(15 downto 0);
+      auto_stop_i          : in    std_logic;
       main_bottom_i        : in    std_logic_vector(80 * (G_STAT_SIZE + 1) - 1 downto 0);
       start_row_o          : out   natural range 0 to G_ROWS - 1;
       start_col_o          : out   natural range 0 to G_COLS - 1;
@@ -118,6 +119,10 @@ begin
          end if;
          if uart_tx_ready_i = '1' then
             uart_tx_valid_o <= '0';
+         end if;
+
+         if auto_stop_i = '1' then
+            continuous_mode <= '0';
          end if;
 
          case state is

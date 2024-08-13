@@ -265,7 +265,7 @@ constant OPTM_S_SAVING     : string := "<Saving>";          -- the internal writ
 --             Do use a lower case \n. If you forget one of them or if you use upper case, you will run into undefined behavior.
 --          2. Start each line that contains an actual menu item (multi- or single-select) with a Space character,
 --             otherwise you will experience visual glitches.
-constant OPTM_SIZE         : natural := 38;  -- amount of items including empty lines:
+constant OPTM_SIZE         : natural := 40;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEMS and amount of items in OPTM_GROUPS
                                              -- IMPORTANT: If SAVE_SETTINGS is true and OPTM_SIZE changes: Make sure to re-generate and
                                              -- and re-distribute the config file. You can make a new one using M2M/tools/make_config.sh
@@ -273,7 +273,7 @@ constant OPTM_SIZE         : natural := 38;  -- amount of items including empty 
 -- Net size of the Options menu on the screen in characters (excluding the frame, which is hardcoded to two characters)
 -- Without submenus: Use OPTM_SIZE as height, otherwise count how large the actually visible main menu is.
 constant OPTM_DX           : natural := 20;
-constant OPTM_DY           : natural := 11;
+constant OPTM_DY           : natural := 13;
 
 constant OPTM_ITEMS        : string :=
 
@@ -318,6 +318,9 @@ constant OPTM_ITEMS        : string :=
    " Back to main menu\n"  &
 
    "\n"                    &
+   " Auto-stop\n"          &
+
+   "\n"                    &
    " About & Help\n"       &
    "\n"                    &
    " Close Menu\n";
@@ -329,7 +332,8 @@ constant OPTM_G_LOAD_PRG   : integer := 1;   -- used in CORE/m2m-rom/m2m.asm: ch
 constant OPTM_G_DENSITY    : integer := 2;
 constant OPTM_G_BORDER     : integer := 3;
 constant OPTM_G_SPEED      : integer := 4;
-constant OPTM_G_ABOUT_HELP : integer := 5;
+constant OPTM_G_AUTO_STOP  : integer := 5;
+constant OPTM_G_ABOUT_HELP : integer := 6;
 
 constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
@@ -370,6 +374,9 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_SPEED,                          -- Slower
                                              OPTM_G_LINE,
                                              OPTM_G_CLOSE         + OPTM_G_SUBMENU,
+
+                                             OPTM_G_LINE,
+                                             OPTM_G_AUTO_STOP     + OPTM_G_SINGLESEL + OPTM_G_STDSEL,
 
                                              OPTM_G_LINE,
                                              OPTM_G_ABOUT_HELP    + OPTM_G_HELP,

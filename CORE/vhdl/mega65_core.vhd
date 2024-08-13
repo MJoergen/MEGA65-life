@@ -248,6 +248,8 @@ architecture synthesis of mega65_core is
    constant C_MENU_GEN_SPEED_SLOW   : natural := 30;
    constant C_MENU_GEN_SPEED_SLOWER : natural := 31;
 
+   constant C_MENU_AUTO_STOP : natural := 35;
+
    signal   main_life_ready         : std_logic;
    signal   main_life_step          : std_logic;
    signal   main_life_addr          : std_logic_vector(9 downto 0);
@@ -261,6 +263,7 @@ architecture synthesis of mega65_core is
    signal   main_init_density       : natural range 0 to 100;
    signal   main_init_border        : natural range 0 to 50;
    signal   main_generational_speed : natural range 0 to 31;
+   signal   main_auto_stop_en       : std_logic;
    signal   main_bottom             : std_logic_vector(80 * (G_STAT_SIZE + 1) - 1 downto 0);
 
    signal   main_tdp_addr    : std_logic_vector(9 downto 0);
@@ -340,6 +343,16 @@ begin
       end if;
    end process generational_speed_proc;
 
+   auto_stop_proc : process (main_clk_o)
+   begin
+      if rising_edge(main_clk_o) then
+         main_auto_stop_en <= '0';
+         if main_osm_control_i(C_MENU_AUTO_STOP) = '1' then
+            main_auto_stop_en <= '1';
+         end if;
+      end if;
+   end process auto_stop_proc;
+
    -- Instantiate main
    life_inst : entity work.life
       generic map (
@@ -377,6 +390,7 @@ begin
          main_init_density_i       => main_init_density,
          main_init_border_i        => main_init_border,
          main_generational_speed_i => main_generational_speed,
+         main_auto_stop_en_i       => main_auto_stop_en,
          main_life_ready_i         => main_life_ready,
          main_life_step_o          => main_life_step,
          main_life_addr_i          => main_life_addr,

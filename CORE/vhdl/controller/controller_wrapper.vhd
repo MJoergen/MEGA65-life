@@ -29,6 +29,7 @@ entity controller_wrapper is
       main_init_density_i       : in    natural range 0 to 100;
       main_init_border_i        : in    natural range 0 to 50;
       main_generational_speed_i : in    natural range 0 to 31;
+      main_auto_stop_en_i       : in    std_logic;
       main_life_ready_i         : in    std_logic;
       main_life_step_o          : out   std_logic;
       main_bottom_o             : out   std_logic_vector(80 * (G_STAT_SIZE + 1) - 1 downto 0);
@@ -157,8 +158,11 @@ architecture synthesis of controller_wrapper is
    signal   main_stat_data  : std_logic_vector(16 * G_STAT_SIZE - 1 downto 0);
 
    signal   main_bottom       : std_logic_vector(80 * (G_STAT_SIZE + 1) - 1 downto 0);
+   signal   main_bottom_d     : std_logic_vector(80 * (G_STAT_SIZE + 1) - 1 downto 0);
+   signal   main_bottom_dd    : std_logic_vector(80 * (G_STAT_SIZE + 1) - 1 downto 0);
    signal   main_bottom_ready : std_logic;
    signal   main_bottom_valid : std_logic_vector(G_STAT_SIZE downto 0);
+   signal   main_auto_stop    : std_logic;
 
 begin
 
@@ -372,6 +376,7 @@ begin
          ready_i              => main_life_ready_i,
          step_o               => main_life_step_o,
          gens_o               => main_life_gens,
+         auto_stop_i          => main_auto_stop_en_i and main_auto_stop,
          main_bottom_i        => main_bottom,
          start_row_o          => main_life_start_row_o,
          start_col_o          => main_life_start_col_o,
@@ -435,10 +440,23 @@ begin
    begin
       if rising_edge(main_clk_i) then
          if and (main_bottom_valid) = '1' then
-            main_bottom_o <= main_bottom;
+            main_bottom_o  <= main_bottom;
+            main_bottom_d  <= main_bottom_o;
+            main_bottom_dd <= main_bottom_d;
          end if;
       end if;
    end process main_bottom_proc;
+
+   autostop_proc : process (main_clk_i)
+   begin
+      if rising_edge(main_clk_i) then
+         main_auto_stop <= '0';
+         if (main_bottom_o(79 downto 0) = main_bottom_d(79 downto 0)) and
+            main_bottom_o = main_bottom_dd then
+            main_auto_stop <= '1';
+         end if;
+      end if;
+   end process autostop_proc;
 
 end architecture synthesis;
 
