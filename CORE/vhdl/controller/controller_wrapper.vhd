@@ -272,7 +272,7 @@ begin
                when C_M65_C =>
                   main_cmd_data <= to_stdlogicvector(character'pos('C'), 8);
 
-               when C_M65_D =>
+               when C_M65_D | C_M65_VERT_CRSR =>
                   main_cmd_data <= to_stdlogicvector(character'pos('D'), 8);
 
                when C_M65_E =>
@@ -296,7 +296,7 @@ begin
                when C_M65_K =>
                   main_cmd_data <= to_stdlogicvector(character'pos('K'), 8);
 
-               when C_M65_L =>
+               when C_M65_L | C_M65_LEFT_CRSR =>
                   main_cmd_data <= to_stdlogicvector(character'pos('L'), 8);
 
                when C_M65_M =>
@@ -314,7 +314,7 @@ begin
                when C_M65_Q =>
                   main_cmd_data <= to_stdlogicvector(character'pos('Q'), 8);
 
-               when C_M65_R =>
+               when C_M65_R | C_M65_HORZ_CRSR =>
                   main_cmd_data <= to_stdlogicvector(character'pos('R'), 8);
 
                when C_M65_S =>
@@ -323,7 +323,7 @@ begin
                when C_M65_T =>
                   main_cmd_data <= to_stdlogicvector(character'pos('T'), 8);
 
-               when C_M65_U =>
+               when C_M65_U | C_M65_UP_CRSR =>
                   main_cmd_data <= to_stdlogicvector(character'pos('U'), 8);
 
                when C_M65_V =>
@@ -451,8 +451,8 @@ begin
    begin
       if rising_edge(main_clk_i) then
          main_auto_stop <= '0';
-         if (main_bottom_o(79 downto 0) = main_bottom_d(79 downto 0)) and
-            main_bottom_o = main_bottom_dd then
+         if (main_bottom_o(159 downto 80) = main_bottom_d(159 downto 80)) and
+            main_bottom_o(80 * (G_STAT_SIZE + 1) - 1 downto 80) = main_bottom_dd(80 * (G_STAT_SIZE + 1) - 1 downto 80) then
             main_auto_stop <= '1';
          end if;
       end if;

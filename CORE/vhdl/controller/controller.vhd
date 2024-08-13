@@ -189,6 +189,8 @@ begin
                         continuous_mode <= not continuous_mode;
 
                      when 'I' =>
+                        start_col_o     <= 0;
+                        start_row_o     <= 0;
                         cur_col         <= 0;
                         cur_row         <= 0;
                         gens_o          <= (others => '0');

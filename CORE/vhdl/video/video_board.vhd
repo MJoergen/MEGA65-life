@@ -64,10 +64,10 @@ architecture synthesis of video_board is
 
    function get_end_y return natural is
    begin
-      if get_start_y + G_ROWS - 1 < G_VIDEO_MODE.V_PIXELS / 8 then
-         return get_start_y + G_ROWS - 1;
+      if get_start_y + G_ROWS < G_VIDEO_MODE.V_PIXELS / 8 - 1 then
+         return get_start_y + G_ROWS;
       else
-         return G_VIDEO_MODE.V_PIXELS / 8;
+         return G_VIDEO_MODE.V_PIXELS / 8 - 1;
       end if;
    end function get_end_y;
 
@@ -105,7 +105,7 @@ begin
    video_addr_o <= to_stdlogicvector(video_board_y, 10);
 
    char_proc : process (video_clk_i)
-      variable video_dec_index_v : natural range 0 to 4;
+      variable video_dec_index_v : natural range 0 to 10 * (G_STAT_SIZE + 1) - 1;
       variable cell_v            : std_logic_vector(G_CELL_BITS - 1 downto 0);
    begin
       if rising_edge(video_clk_i) then

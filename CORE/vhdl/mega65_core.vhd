@@ -248,7 +248,7 @@ architecture synthesis of mega65_core is
    constant C_MENU_GEN_SPEED_SLOW   : natural := 30;
    constant C_MENU_GEN_SPEED_SLOWER : natural := 31;
 
-   constant C_MENU_AUTO_STOP : natural := 35;
+   constant C_MENU_AUTO_STOP : natural        := 35;
 
    signal   main_life_ready         : std_logic;
    signal   main_life_step          : std_logic;
@@ -270,6 +270,9 @@ architecture synthesis of mega65_core is
    signal   main_tdp_rd_data : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
    signal   main_tdp_wr_data : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
    signal   main_tdp_wr_en   : std_logic;
+
+   signal   main_cdc  : std_logic_vector(80 * (G_STAT_SIZE + 1) + 31 downto 0);
+   signal   video_cdc : std_logic_vector(80 * (G_STAT_SIZE + 1) + 31 downto 0);
 
    signal   video_bottom    : std_logic_vector(80 * (G_STAT_SIZE + 1) - 1 downto 0);
    signal   video_start_row : std_logic_vector(15 downto 0);
@@ -438,17 +441,28 @@ begin
    -- Video output
    ---------------------------------------------------------------------------------------------
 
+   main_cdc <=
+   (
+      main_bottom,
+      std_logic_vector(to_unsigned(main_life_start_row,
+                                     16)),
+      std_logic_vector(to_unsigned(main_life_start_col,
+                                     16))
+   );
+
    xpm_cdc_array_single_inst : component xpm_cdc_array_single
       generic map (
          DEST_SYNC_FF => 2,
-         WIDTH        => 80 * (G_STAT_SIZE + 1)
+         WIDTH        => 80 * (G_STAT_SIZE + 1) + 32
       )
       port map (
          src_clk  => main_clk_o,
-         src_in   => main_bottom,
+         src_in   => main_cdc,
          dest_clk => video_clk_o,
-         dest_out => video_bottom
+         dest_out => video_cdc
       ); -- xpm_cdc_array_single_inst
+
+   (video_bottom, video_start_row, video_start_col) <= video_cdc;
 
    video_wrapper_inst : entity work.video_wrapper
       generic map (
