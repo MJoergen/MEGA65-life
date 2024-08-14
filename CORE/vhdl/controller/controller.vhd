@@ -93,31 +93,35 @@ begin
                    rand_output(0) & rand_output(25) & rand_output(7);
 
 
-   board_busy_o <= '1' when state = PRINTING_ST or board_wr_en_o = '1' else
+   board_busy_o <= '1' when board_wr_en_o = '1' else
                    '0';
    board_addr_o <= to_stdlogicvector(cur_row, 10);
 
    cmd_ready_o  <= '1' when state = IDLE_ST and ready_i = '1' else
                    '0';
 
-   fsm_proc : process (clk_i)
-      variable cell_v : std_logic_vector(G_CELL_BITS - 1 downto 0);
+   regs_proc : process (clk_i)
    begin
       if rising_edge(clk_i) then
-         board_wr_en_o             <= '0';
          step_counter              <= step_counter + 1;
          init_rand7_cutoff         <= to_stdlogicvector((init_density_i * 128) / 100, 7);
          -- Use two clock cycles
          init_border_cutoff_prelim <= init_border_i * ((G_COLS * 128) / 100);
          init_border_cutoff        <= init_border_cutoff_prelim / 128;
          random_bit                <= to_stdlogic(rand7 < init_rand7_cutoff);
+      end if;
+   end process regs_proc;
+
+   fsm_proc : process (clk_i)
+      variable cell_v : std_logic_vector(G_CELL_BITS - 1 downto 0);
+   begin
+      if rising_edge(clk_i) then
+         board_wr_en_o <= '0';
 
          if ready_i = '1' then
-            step_o <= step and continuous_mode;
-            if (step and continuous_mode) = '1' then
-               gens_o <= gens_o + 1;
-            end if;
+            step_o <= '0';
          end if;
+
          if uart_tx_ready_i = '1' then
             uart_tx_valid_o <= '0';
          end if;
@@ -155,6 +159,19 @@ begin
                end if;
 
             when IDLE_ST =>
+               if ready_i = '1' then
+                  step_o <= step and continuous_mode;
+                  if (step and continuous_mode) = '1' then
+                     gens_o       <= gens_o + 1;
+
+                     -- Just print statistics line
+                     wait_for_ram <= '0';
+                     cur_row      <= G_ROWS;
+                     cur_col      <= 0;
+                     state        <= PRINTING_ST;
+                  end if;
+               end if;
+
                if cmd_valid_i = '1' then
 
                   case character'val(to_integer(cmd_data_i)) is
