@@ -22,7 +22,7 @@ entity mega65_core is
       G_FONT_PATH     : string  := "";
       G_UART_BAUDRATE : natural := 115_200;
       G_CELL_BITS     : integer := 3;
-      G_STAT_SIZE     : integer := 4;
+      G_STAT_SIZE     : integer := 5;
       G_COLS          : integer := 160;
       G_ROWS          : integer := 89;
       G_BOARD         : string -- Which platform are we running on.

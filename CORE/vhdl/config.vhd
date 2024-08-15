@@ -341,11 +341,11 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_SUBMENU + OPTM_G_START,         -- Density submenu
                                              OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
-                                             OPTM_G_DENSITY,
-                                             OPTM_G_DENSITY,
-                                             OPTM_G_DENSITY       + OPTM_G_STDSEL,
-                                             OPTM_G_DENSITY,
-                                             OPTM_G_DENSITY,
+                                             OPTM_G_DENSITY,                        -- 30
+                                             OPTM_G_DENSITY,                        -- 25
+                                             OPTM_G_DENSITY       + OPTM_G_STDSEL,  -- 20
+                                             OPTM_G_DENSITY,                        -- 15
+                                             OPTM_G_DENSITY,                        -- 10
                                              OPTM_G_LINE,
                                              OPTM_G_CLOSE         + OPTM_G_SUBMENU,
 
@@ -354,11 +354,11 @@ constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_SUBMENU + OPTM_G_START,         -- Border submenu
                                              OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
-                                             OPTM_G_BORDER,
-                                             OPTM_G_BORDER,
-                                             OPTM_G_BORDER        + OPTM_G_STDSEL,
-                                             OPTM_G_BORDER,
-                                             OPTM_G_BORDER,
+                                             OPTM_G_BORDER,                         -- 20
+                                             OPTM_G_BORDER,                         -- 15
+                                             OPTM_G_BORDER        + OPTM_G_STDSEL,  -- 10
+                                             OPTM_G_BORDER,                         --  5
+                                             OPTM_G_BORDER,                         --  0
                                              OPTM_G_LINE,
                                              OPTM_G_CLOSE         + OPTM_G_SUBMENU,
 

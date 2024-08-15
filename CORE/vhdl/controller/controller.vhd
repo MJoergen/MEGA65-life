@@ -206,6 +206,10 @@ begin
 
                      when 'C' =>
                         continuous_mode <= not continuous_mode;
+                        cur_col         <= 0;
+                        cur_row         <= G_ROWS;
+                        wait_for_ram    <= '0';
+                        state           <= PRINTING_ST;
 
                      when 'I' =>
                         start_col_o     <= 0;
