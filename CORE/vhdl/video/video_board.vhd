@@ -81,12 +81,16 @@ architecture synthesis of video_board is
    signal   video_board_y_1 : natural range 0 to G_ROWS - 1;
    signal   video_x_1       : std_logic_vector(7 downto 0);
    signal   video_y_1       : std_logic_vector(7 downto 0);
-   signal   cell_1          : std_logic_vector(G_CELL_BITS - 1 downto 0);
+
+   -- Stage 2
+   signal   video_board_x_2 : natural range 0 to G_COLS - 1;
+   signal   video_x_2       : std_logic_vector(7 downto 0);
+   signal   video_y_2       : std_logic_vector(7 downto 0);
+   signal   cell_2          : std_logic_vector(G_CELL_BITS - 1 downto 0);
 
 begin
 
-   -- Stage 1
-   video_pan_proc : process (video_clk_i)
+   stage1_proc : process (video_clk_i)
       variable tmp_x_v : natural range 0 to G_COLS - 1;
       variable tmp_y_v : natural range 0 to G_ROWS - 1;
    begin
@@ -109,14 +113,24 @@ begin
             video_board_y_1 <= tmp_y_v + video_start_row_i - G_ROWS;
          end if;
       end if;
-   end process video_pan_proc;
+   end process stage1_proc;
 
    video_addr_o <= to_stdlogicvector(video_board_y_1, 10);
 
-   cell_1       <= video_data_i(video_board_x_1 * G_CELL_BITS + G_CELL_BITS - 1 downto video_board_x_1 * G_CELL_BITS);
+   stage2_proc : process (video_clk_i)
+   begin
+      if rising_edge(video_clk_i) then
+         video_board_x_2 <= video_board_x_1;
+         video_x_2       <= video_x_1;
+         video_y_2       <= video_y_1;
+      end if;
+   end process stage2_proc;
 
    -- Stage 2
-   char_proc : process (video_clk_i)
+   cell_2       <= video_data_i(video_board_x_2 * G_CELL_BITS + G_CELL_BITS - 1 downto video_board_x_2 * G_CELL_BITS);
+
+   -- Stage 3
+   stage3_proc : process (video_clk_i)
       variable video_dec_index_v : natural range 0 to 10 * (G_STAT_SIZE + 1) - 1;
       variable cell_v            : std_logic_vector(G_CELL_BITS - 1 downto 0);
    begin
@@ -125,29 +139,29 @@ begin
          video_char_o   <= X"20";
 
          -- Display board
-         if video_x_1 >= C_START_X and video_x_1 < C_END_X and
-            video_y_1 >= C_START_Y and video_y_1 < C_END_Y then
-            if or (cell_1) = '1' then
-               video_char_o <= X"58";
+         if video_x_2 >= C_START_X and video_x_2 < C_END_X and
+            video_y_2 >= C_START_Y and video_y_2 < C_END_Y then
+            if or (cell_2) = '1' then
+               video_char_o <= X"0F";
             else
-               video_char_o <= X"2E";
+               video_char_o <= X"10";
             end if;
-            video_colors_o <= C_PIXEL_DARK & (C_PIXEL_LIGHT / (2 ** G_CELL_BITS - to_integer(cell_1)));
+            video_colors_o <= C_PIXEL_DARK & (C_PIXEL_LIGHT / (2 ** G_CELL_BITS - to_integer(cell_2)));
          end if;
 
          -- Display bottom line
-         if video_x_1 >= C_START_X and video_x_1 < C_START_X + 10 * (G_STAT_SIZE + 1) and
-            video_y_1 = C_END_Y then
-            video_dec_index_v := to_integer(video_x_1 - C_START_X);
+         if video_x_2 >= C_START_X and video_x_2 < C_START_X + 10 * (G_STAT_SIZE + 1) and
+            video_y_2 = C_END_Y then
+            video_dec_index_v := to_integer(video_x_2 - C_START_X);
             video_char_o      <= video_bottom_i(8 * video_dec_index_v + 7 downto 8 * video_dec_index_v);
             video_colors_o    <= C_PIXEL_DARK & C_PIXEL_LIGHT;
          end if;
-         if video_x_1 >= C_START_X + 10 * (G_STAT_SIZE + 1) and video_x_1 < C_START_X + G_COLS and
-            video_y_1 = C_END_Y then
+         if video_x_2 >= C_START_X + 10 * (G_STAT_SIZE + 1) and video_x_2 < C_START_X + G_COLS and
+            video_y_2 = C_END_Y then
             video_colors_o <= C_PIXEL_DARK & C_PIXEL_LIGHT;
          end if;
       end if;
-   end process char_proc;
+   end process stage3_proc;
 
 end architecture synthesis;
 

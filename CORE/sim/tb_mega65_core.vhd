@@ -88,17 +88,17 @@ begin
       wait for 2 us;
 
       uart_send("P");
-      wait for 80 us;
+      wait for 100 us;
 
       uart_send("S");
       wait for 2 us;
       uart_send("P");
-      wait for 80 us;
+      wait for 100 us;
 
       uart_send("S");
       wait for 2 us;
       uart_send("P");
-      wait for 80 us;
+      wait for 100 us;
 
       report "Test finished";
       running <= '0';

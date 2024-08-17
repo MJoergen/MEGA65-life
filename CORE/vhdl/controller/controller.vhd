@@ -40,7 +40,7 @@ architecture synthesis of controller is
 
    constant C_POPULATION_RATE : natural                  := 25; -- Initial population rate in %
 
-   type     state_type is (INIT_ST, IDLE_ST, PRINTING_ST);
+   type     state_type is (INIT_ST, IDLE_ST, PRINTING_ST, PRINT_BOTTOM_ST);
    signal   state           : state_type                 := INIT_ST;
    signal   continuous_mode : std_logic;
 
@@ -93,7 +93,7 @@ begin
                    rand_output(0) & rand_output(25) & rand_output(7);
 
 
-   board_busy_o <= '1' when board_wr_en_o = '1' else
+   board_busy_o <= '1' when state = PRINTING_ST or board_wr_en_o = '1' else
                    '0';
    board_addr_o <= to_stdlogicvector(cur_row, 10);
 
@@ -162,13 +162,10 @@ begin
                if ready_i = '1' then
                   step_o <= step and continuous_mode;
                   if (step and continuous_mode) = '1' then
-                     gens_o       <= gens_o + 1;
+                     gens_o <= gens_o + 1;
 
                      -- Just print statistics line
-                     wait_for_ram <= '0';
-                     cur_row      <= G_ROWS;
-                     cur_col      <= 0;
-                     state        <= PRINTING_ST;
+                     state  <= PRINT_BOTTOM_ST;
                   end if;
                end if;
 
@@ -206,10 +203,7 @@ begin
 
                      when 'C' =>
                         continuous_mode <= not continuous_mode;
-                        cur_col         <= 0;
-                        cur_row         <= G_ROWS;
-                        wait_for_ram    <= '0';
-                        state           <= PRINTING_ST;
+                        state           <= PRINT_BOTTOM_ST;
 
                      when 'I' =>
                         start_col_o     <= 0;
@@ -270,21 +264,28 @@ begin
                         wait_for_ram   <= '1';
                      end if;
                      uart_tx_valid_o <= '1';
-                  elsif cur_row = G_ROWS then
-                     -- print bottom row
-                     if cur_col < 10 * (G_STAT_SIZE + 1) then
-                        uart_tx_data_o <= main_bottom_i(8 * cur_col + 7 downto 8 * cur_col);
-                        cur_col        <= cur_col + 1;
-                     elsif cur_col = 10 * (G_STAT_SIZE + 1) then
-                        uart_tx_data_o <= X"0D";
-                        cur_col        <= cur_col + 1;
-                     else
-                        uart_tx_data_o <= X"0A";
-                        cur_col        <= 0;
-                        state          <= IDLE_ST;
-                     end if;
-                     uart_tx_valid_o <= '1';
+                  else
+                     cur_col <= 0;
+                     state   <= PRINT_BOTTOM_ST;
                   end if;
+               end if;
+
+            when PRINT_BOTTOM_ST =>
+               if uart_tx_ready_i = '1' then
+                  -- print bottom row
+                  if cur_col < 10 * (G_STAT_SIZE + 1) then
+                     uart_tx_data_o <= main_bottom_i(8 * cur_col + 7 downto 8 * cur_col);
+                     cur_col        <= cur_col + 1;
+                  elsif cur_col = 10 * (G_STAT_SIZE + 1) then
+                     uart_tx_data_o <= X"0D";
+                     cur_col        <= cur_col + 1;
+                  else
+                     uart_tx_data_o <= X"0A";
+                     cur_col        <= 0;
+                     cur_row        <= 0;
+                     state          <= IDLE_ST;
+                  end if;
+                  uart_tx_valid_o <= '1';
                end if;
 
          end case;

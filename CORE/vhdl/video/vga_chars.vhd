@@ -37,28 +37,26 @@ architecture synthesis of vga_chars is
    -- Stage 1
    signal  black_1        : std_logic;
    signal  bitmap_index_1 : integer range 0 to 63;
-   signal  nibble_1       : std_logic_vector(3 downto 0);
-   signal  char_nibble_1  : std_logic_vector(7 downto 0);
-   signal  char_txt_1     : std_logic_vector(7 downto 0);
 
    -- Stage 2
    signal  black_2        : std_logic;
    signal  bitmap_index_2 : integer range 0 to 63;
-   signal  nibble_2       : std_logic_vector(3 downto 0);
-   signal  char_nibble_2  : std_logic_vector(7 downto 0);
-   signal  char_txt_2     : std_logic_vector(7 downto 0);
-   signal  char_2         : std_logic_vector(7 downto 0);
-   signal  colors_2       : std_logic_vector(15 downto 0);
 
    -- Stage 3
    signal  black_3        : std_logic;
-   signal  bitmap_3       : BITMAP_TYPE;
    signal  bitmap_index_3 : integer range 0 to 63;
-   signal  pix_3          : std_logic;
+   signal  char_3         : std_logic_vector(7 downto 0);
    signal  colors_3       : std_logic_vector(15 downto 0);
 
    -- Stage 4
-   signal  pixel_4 : std_logic_vector(7 downto 0);
+   signal  black_4        : std_logic;
+   signal  bitmap_4       : BITMAP_TYPE;
+   signal  bitmap_index_4 : integer range 0 to 63;
+   signal  pix_4          : std_logic;
+   signal  colors_4       : std_logic_vector(15 downto 0);
+
+   -- Stage 5
+   signal  pixel_5 : std_logic_vector(7 downto 0);
 
 begin
 
@@ -101,13 +99,25 @@ begin
       end if;
    end process stage2_proc;
 
+   --------------------------------------------------
+   -- Stage 3
+   --------------------------------------------------
+
+   stage3_proc : process (vga_clk_i)
+   begin
+      if rising_edge(vga_clk_i) then
+         black_3        <= black_2;
+         bitmap_index_3 <= bitmap_index_2;
+      end if;
+   end process stage3_proc;
+
    -- Calculate character to display at current position
-   char_2         <= vga_char_i;
-   colors_2       <= vga_colors_i;
+   char_3         <= vga_char_i;
+   colors_3       <= vga_colors_i;
 
 
    --------------------------------------------------
-   -- Stage 3
+   -- Stage 4
    --------------------------------------------------
 
    -- Calculate bitmap (64 bits) of digit at current position
@@ -117,47 +127,47 @@ begin
       )
       port map (
          clk_i    => vga_clk_i,
-         char_i   => char_2,
-         bitmap_o => bitmap_3
+         char_i   => char_3,
+         bitmap_o => bitmap_4
       ); -- font_inst
 
-   stage3_proc : process (vga_clk_i)
-   begin
-      if rising_edge(vga_clk_i) then
-         black_3        <= black_2;
-         bitmap_index_3 <= bitmap_index_2;
-         colors_3       <= colors_2;
-      end if;
-   end process stage3_proc;
-
-   -- Calculate pixel at current position ('0' or '1')
-   pix_3                   <= bitmap_3(bitmap_index_3);
-
-
-   --------------------------------------------------
-   -- Stage 4
-   --------------------------------------------------
-
-   -- Generate pixel colour
    stage4_proc : process (vga_clk_i)
    begin
       if rising_edge(vga_clk_i) then
-         if pix_3 = '1' then
-            pixel_4 <= colors_3(7 downto 0);
-         else
-            pixel_4 <= colors_3(15 downto 8);
-         end if;
-
-         -- Make sure colour is black outside visible screen
-         if black_3 = '1' then
-            pixel_4 <= (others => '0');
-         end if;
+         black_4        <= black_3;
+         bitmap_index_4 <= bitmap_index_3;
+         colors_4       <= colors_3;
       end if;
    end process stage4_proc;
 
-   vga_rgb_o(23 downto 16) <= pixel_4(7 downto 5) & "00000";
-   vga_rgb_o(15 downto 8)  <= pixel_4(4 downto 2) & "00000";
-   vga_rgb_o(7 downto 0)   <= pixel_4(1 downto 0) & "000000";
+   -- Calculate pixel at current position ('0' or '1')
+   pix_4                   <= bitmap_4(bitmap_index_4);
+
+
+   --------------------------------------------------
+   -- Stage 5
+   --------------------------------------------------
+
+   -- Generate pixel colour
+   stage5_proc : process (vga_clk_i)
+   begin
+      if rising_edge(vga_clk_i) then
+         if pix_4 = '1' then
+            pixel_5 <= colors_4(7 downto 0);
+         else
+            pixel_5 <= colors_4(15 downto 8);
+         end if;
+
+         -- Make sure colour is black outside visible screen
+         if black_4 = '1' then
+            pixel_5 <= (others => '0');
+         end if;
+      end if;
+   end process stage5_proc;
+
+   vga_rgb_o(23 downto 16) <= pixel_5(7 downto 5) & "00000";
+   vga_rgb_o(15 downto 8)  <= pixel_5(4 downto 2) & "00000";
+   vga_rgb_o(7 downto 0)   <= pixel_5(1 downto 0) & "000000";
 
 end architecture synthesis;
 
