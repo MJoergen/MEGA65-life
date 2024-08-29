@@ -76,7 +76,7 @@ begin
    shift_registers_inst : entity work.shift_registers
       generic map (
          G_DATA_SIZE => 4,
-         G_DEPTH     => 3
+         G_DEPTH     => 5
       )
       port map (
          clk_i   => video_clk_i,

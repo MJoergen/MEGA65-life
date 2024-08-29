@@ -30,3 +30,39 @@ cells on the right, then we have maximum correlation, and rho\_k = 1.
 Alternatively, if the pattern consists of entirely alternating alive and dead cells, then
 we have minimum correlation (or maximum anti-correlation), and rho\_k = -1.
 
+### Results with 100 x 100, and initial density of 0.15
+
+time =   2223 +/- 1609
+dens =  0.028 +/- 0.003
+rho1 =  0.284 +/- 0.029
+rho2 =  0.088 +/- 0.018
+rho3 =  0.019 +/- 0.014
+rho4 = -0.012 +/- 0.010
+
+### Results with 200 x 200, and initial density of 0.15
+
+time =   3956 +/- 1856
+dens =  0.028 +/- 0.002
+rho1 =  0.285 +/- 0.015
+rho2 =  0.088 +/- 0.008
+rho3 =  0.019 +/- 0.006
+rho4 = -0.011 +/- 0.006
+
+### Results with 300 x 300, and initial density of 0.15
+
+time =   4815 +/- 1591
+dens =  0.028 +/- 0.002
+rho1 =  0.284 +/- 0.010
+rho2 =  0.091 +/- 0.005
+rho3 =  0.017 +/- 0.004
+rho4 = -0.011 +/- 0.004
+
+### Results with 400 x 400, and initial density of 0.15
+
+time =   5626 +/- 1648
+dens =  0.028 +/- 0.001
+rho1 =  0.284 +/- 0.007
+rho2 =  0.090 +/- 0.004
+rho3 =  0.017 +/- 0.003
+rho4 = -0.011 +/- 0.003
+

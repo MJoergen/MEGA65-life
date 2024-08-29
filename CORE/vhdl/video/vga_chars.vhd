@@ -2,6 +2,8 @@ library ieee;
    use ieee.std_logic_1164.all;
    use ieee.numeric_std_unsigned.all;
 
+-- Latency: 5 clock cycles
+
 library work;
    use work.video_modes_pkg.all;
 
