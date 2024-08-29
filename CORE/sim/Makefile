@@ -8,9 +8,8 @@ SRCS += ../vhdl/clk.vhd
 SRCS += ../vhdl/globals.vhd
 SRCS += ../vhdl/life.vhd
 SRCS += ../vhdl/video/shift_registers.vhd
-SRCS += ../vhdl/video/divexact.vhd
-SRCS += ../vhdl/video/slv_to_dec.vhd
-SRCS += ../vhdl/video/slv2str.vhd
+SRCS += ../vhdl/controller/divmod.vhd
+SRCS += ../vhdl/controller/bin2bcd.vhd
 SRCS += ../vhdl/controller/count_ones.vhd
 SRCS += ../vhdl/controller/statistics.vhd
 SRCS += ../vhdl/controller/lfsr.vhd
@@ -27,10 +26,12 @@ SRCS += uart_dumper.vhd
 SRCS += tb_statistics.vhd
 SRCS += tb_life.vhd
 SRCS += tb_mega65_core.vhd
+SRCS += tb_bin2bcd.vhd
 
 TB = life
 TB = mega65_core
-#TB = statistics
+TB = statistics
+TB = bin2bcd
 
 GENERICS += -gG_CELL_BITS=4
 GENERICS += -gG_ROWS=8
@@ -40,6 +41,6 @@ GENERICS += -gG_BOARD=R6
 all:
 	vlog glbl.v
 	vcom -2008 $(SRCS)
-	vsim -voptargs=+acc $(GENERICS) -do wave_$(TB).do tb_$(TB) glbl
+	vsim -voptargs=+acc $(GENERICS) -do wave_$(TB).do tb_$(TB) glbl -c
 
 

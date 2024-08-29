@@ -408,7 +408,7 @@ begin
 
    main_bottom_ready <= and(main_bottom_valid);
 
-   slv2str_gens_inst : entity work.slv2str
+   bin2bcd_gens_inst : entity work.bin2bcd
       port map (
          clk_i     => main_clk_i,
          rst_i     => main_rst_i,
@@ -417,12 +417,12 @@ begin
          s_data_i  => main_life_gens,
          m_ready_i => main_bottom_ready,
          m_valid_o => main_bottom_valid(0),
-         m_str_o   => main_bottom(79 downto 0)
-      ); -- slv2str_gens_inst
+         m_data_o  => main_bottom(79 downto 0)
+      ); -- bin2bcd_gens_inst
 
    stat_gen : for i in 0 to G_STAT_SIZE - 1 generate
 
-      slv2str_count_inst : entity work.slv2str
+      bin2bcd_count_inst : entity work.bin2bcd
          port map (
             clk_i     => main_clk_i,
             rst_i     => main_rst_i,
@@ -431,8 +431,8 @@ begin
             s_data_i  => main_stat_data(16 * i + 15 downto 16 * i),
             m_ready_i => main_bottom_ready,
             m_valid_o => main_bottom_valid(i + 1),
-            m_str_o   => main_bottom(80 * (i + 1) + 79 downto 80 * (i + 1))
-         ); -- slv2str_count_inst
+            m_data_o  => main_bottom(80 * (i + 1) + 79 downto 80 * (i + 1))
+         ); -- bin2bcd_count_inst
 
    end generate stat_gen;
 
