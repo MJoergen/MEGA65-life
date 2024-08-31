@@ -14,6 +14,7 @@ SRCS += ../vhdl/controller/count_ones.vhd
 SRCS += ../vhdl/controller/statistics.vhd
 SRCS += ../vhdl/controller/lfsr.vhd
 SRCS += ../vhdl/controller/random.vhd
+SRCS += ../vhdl/controller/keyboard.vhd
 SRCS += ../vhdl/controller/controller.vhd
 SRCS += ../vhdl/controller/controller_wrapper.vhd
 SRCS += ../vhdl/video/font.vhd
