@@ -29,7 +29,7 @@ architecture synthesis of divmod is
 
 begin
 
-   s_ready_o <= m_ready_i when state = IDLE_ST else
+   s_ready_o <= (m_ready_i or not m_valid_o) when state = IDLE_ST else
                 '0';
 
    divmod_proc : process (clk_i)

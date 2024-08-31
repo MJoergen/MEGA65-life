@@ -38,8 +38,6 @@ end entity controller;
 
 architecture synthesis of controller is
 
-   constant C_POPULATION_RATE : natural                  := 25; -- Initial population rate in %
-
    type     state_type is (INIT_ST, IDLE_ST, PRINTING_ST, PRINT_BOTTOM_ST);
    signal   state           : state_type                 := INIT_ST;
    signal   continuous_mode : std_logic;

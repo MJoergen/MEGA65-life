@@ -22,7 +22,7 @@ architecture synthesis of bin2bcd is
 
    type     state_type is (IDLE_ST, BUSY_ST);
    signal   state : state_type       := IDLE_ST;
-   signal   index : natural range 0 to 4;
+   signal   index : natural range 5 to 9;
    signal   pad   : std_logic_vector(7 downto 0);
 
    signal   divmod_s_ready     : std_logic;
@@ -38,7 +38,7 @@ architecture synthesis of bin2bcd is
 
 begin
 
-   s_ready_o      <= m_ready_i and divmod_s_ready when state = IDLE_ST else
+   s_ready_o      <= (m_ready_i or not m_valid_o) when state = IDLE_ST else
                      '0';
 
    fsm_proc : process (clk_i)
@@ -58,24 +58,24 @@ begin
                if s_valid_i = '1' and s_ready_o = '1' then
                   divmod_s_numerator <= s_data_i;
                   divmod_s_valid     <= '1';
-                  index              <= 4;
+                  index              <= 5;
                   state              <= BUSY_ST;
                   pad                <= X"20";
                   m_data_o           <= X"20202020202020202020";
                end if;
 
             when BUSY_ST =>
-               if divmod_m_valid = '1' then
+               if divmod_m_valid = '1' and divmod_m_ready = '1' then
                   m_data_o(index * 8 + 7 downto index * 8) <= pad;
-                  if divmod_m_quotient /= 0 or index = 0 then
+                  if divmod_m_quotient /= 0 or index = 9 then
                      m_data_o(index * 8 + 7 downto index * 8) <= X"3" & divmod_m_quotient(3 downto 0);
                      pad                                      <= X"30";
                   end if;
 
-                  if index > 0 then
+                  if index < 9 then
                      divmod_s_numerator <= divmod_m_remainder;
                      divmod_s_valid     <= '1';
-                     index              <= index - 1;
+                     index              <= index + 1;
                   else
                      m_valid_o <= '1';
                      state     <= IDLE_ST;
@@ -92,7 +92,7 @@ begin
       end if;
    end process fsm_proc;
 
-   divmod_m_ready <= m_ready_i;
+   divmod_m_ready <= m_ready_i or not m_valid_o;
 
    divmod_inst : entity work.divmod
       generic map (
@@ -104,7 +104,7 @@ begin
          s_ready_o       => divmod_s_ready,
          s_valid_i       => divmod_s_valid,
          s_numerator_i   => divmod_s_numerator,
-         s_denominator_i => to_stdlogicvector(C_POW_TEN(index), 16),
+         s_denominator_i => to_stdlogicvector(C_POW_TEN(9-index), 16),
          m_ready_i       => divmod_m_ready,
          m_valid_o       => divmod_m_valid,
          m_quotient_o    => divmod_m_quotient,

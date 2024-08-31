@@ -53,10 +53,10 @@ begin
          data_v := arg;
 
          digit_loop : for i in 0 to 4 loop
-            digit_v                       := data_v mod 10;
-            data_v                        := data_v / 10;
+            digit_v                                   := data_v mod 10;
+            data_v                                    := data_v / 10;
 
-            res_v(i * 8 + 7 downto i * 8) := X"3" & to_stdlogicvector(digit_v, 4);
+            res_v((9 - i) * 8 + 7 downto (9 - i) * 8) := X"3" & to_stdlogicvector(digit_v, 4);
             if data_v = 0 then
                exit digit_loop;
             end if;
