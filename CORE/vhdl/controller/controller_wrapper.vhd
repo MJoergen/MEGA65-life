@@ -43,7 +43,15 @@ entity controller_wrapper is
       main_board_addr_o         : out   std_logic_vector(9 downto 0);
       main_board_rd_data_i      : in    std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
       main_board_wr_data_o      : out   std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
-      main_board_wr_en_o        : out   std_logic
+      main_board_wr_en_o        : out   std_logic;
+
+      qnice_clk_i               : in    std_logic;
+      qnice_rst_i               : in    std_logic;
+      qnice_addr_i              : in    std_logic_vector(27 downto 0);
+      qnice_data_i              : in    std_logic_vector(15 downto 0);
+      qnice_data_o              : out   std_logic_vector(15 downto 0);
+      qnice_ce_i                : in    std_logic;
+      qnice_we_i                : in    std_logic
    );
 end entity controller_wrapper;
 
@@ -81,14 +89,26 @@ architecture synthesis of controller_wrapper is
    signal main_bottom_valid : std_logic_vector(G_STAT_SIZE downto 0);
    signal main_auto_stop    : std_logic;
 
+   signal main_drives_load : std_logic;
+   signal main_drives_save : std_logic;
+   signal main_drives_ack  : std_logic;
+   signal main_drives_busy : std_logic;
+
+   signal main_drives_addr    : std_logic_vector(9 downto 0);
+   signal main_drives_rd_data : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
+   signal main_drives_wr_data : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
+   signal main_drives_wr_en   : std_logic;
 
 begin
 
-   main_board_addr_o    <= main_controller_addr when main_controller_busy = '1' else
+   main_board_addr_o    <= main_drives_addr when main_drives_busy = '1' else
+                           main_controller_addr when main_controller_busy = '1' else
                            main_life_addr_i;
-   main_board_wr_data_o <= main_controller_wr_data when main_controller_busy = '1' else
+   main_board_wr_data_o <= main_drives_wr_data when main_drives_busy = '1' else
+                           main_controller_wr_data when main_controller_busy = '1' else
                            main_life_wr_data_i;
-   main_board_wr_en_o   <= main_controller_wr_en when main_controller_busy = '1' else
+   main_board_wr_en_o   <= main_drives_wr_en when main_drives_busy = '1' else
+                           main_controller_wr_en when main_controller_busy = '1' else
                            main_life_wr_en_i;
    main_life_rd_data_o  <= main_board_rd_data_i;
 
@@ -174,6 +194,9 @@ begin
          main_bottom_i        => main_bottom,
          start_row_o          => main_life_start_row_o,
          start_col_o          => main_life_start_col_o,
+         load_o               => main_drives_load,
+         save_o               => main_drives_save,
+         ack_i                => main_drives_ack,
          board_busy_o         => main_controller_busy,
          board_addr_o         => main_controller_addr,
          board_rd_data_i      => main_board_rd_data_i,
@@ -250,6 +273,32 @@ begin
          end if;
       end if;
    end process autostop_proc;
+
+   drives_inst : entity work.drives
+      generic map (
+         G_CELL_BITS => G_CELL_BITS,
+         G_ROWS      => G_ROWS,
+         G_COLS      => G_COLS
+      )
+      port map (
+         main_clk_i     => main_clk_i,
+         main_rst_i     => main_rst_i,
+         main_load_i    => main_drives_load,
+         main_save_i    => main_drives_save,
+         main_ack_o     => main_drives_ack,
+         main_busy_o    => main_drives_busy,
+         main_addr_o    => main_drives_addr,
+         main_rd_data_i => main_board_rd_data_i,
+         main_wr_data_o => main_drives_wr_data,
+         main_wr_en_o   => main_drives_wr_en,
+         qnice_clk_i    => qnice_clk_i,
+         qnice_rst_i    => qnice_rst_i,
+         qnice_addr_i   => qnice_addr_i,
+         qnice_data_i   => qnice_data_i,
+         qnice_data_o   => qnice_data_o,
+         qnice_ce_i     => qnice_ce_i,
+         qnice_we_i     => qnice_we_i
+      ); -- drives_inst
 
 end architecture synthesis;
 

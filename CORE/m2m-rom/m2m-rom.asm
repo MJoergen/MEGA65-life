@@ -77,7 +77,28 @@ SUBMENU_SUMMARY XOR     R8, R8                  ; R8 = 0 = no custom string
 ;       for triggering FILTER_FILES
 ; Output:
 ;   R8: 0=do not filter file, i.e. show file
-FILTER_FILES    XOR     R8, R8                  ; do not filter
+FILTER_FILES    INCRB
+                MOVE    R9, R0
+
+                CMP     1, R9                   ; do not filter directories
+                RBRA    _FFILES_RET_0, Z
+
+                ; Context: Mount virtual drive
+                CMP     CTX_MOUNT_DISKIMG, R10
+                RBRA    _FFILES_RET_0, !Z       ; do not filter in other CTXs
+
+                ; does this file have the ".LIF" file extension?
+                MOVE    LIFE_IMGFILE_LIF, R9
+                RSUB    M2M$CHK_EXT, 1
+                RBRA    _FFILES_RET_0, C        ; yes: do not filter it
+
+_FFILES_DOFLT   MOVE    1, R8                   ; no: filter it
+                RBRA    _FFILES_RET, 1
+
+_FFILES_RET_0   XOR     R8, R8                  ; do not filter
+
+_FFILES_RET     MOVE    R0, R9
+                DECRB
                 RET
 
 ; PREP_LOAD_IMAGE callback function:
@@ -175,6 +196,8 @@ CUSTOM_MSG      XOR     R8, R8                  ; no custom message
 ; ----------------------------------------------------------------------------
 ; Core specific constants and strings
 ; ----------------------------------------------------------------------------
+
+LIFE_IMGFILE_LIF .ASCII_W ".LIF"
 
 END_OF_ROM      .DW 0
 

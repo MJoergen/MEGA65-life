@@ -28,6 +28,9 @@ entity controller is
       main_bottom_i        : in    std_logic_vector(80 * (G_STAT_SIZE + 1) - 1 downto 0);
       start_row_o          : out   natural range 0 to G_ROWS - 1;
       start_col_o          : out   natural range 0 to G_COLS - 1;
+      load_o               : out   std_logic;
+      save_o               : out   std_logic;
+      ack_i                : in    std_logic;
       board_busy_o         : out   std_logic;
       board_addr_o         : out   std_logic_vector(9 downto 0);
       board_rd_data_i      : in    std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
@@ -38,24 +41,24 @@ end entity controller;
 
 architecture synthesis of controller is
 
-   type     state_type is (INIT_ST, IDLE_ST, PRINTING_ST, PRINT_BOTTOM_ST);
-   signal   state           : state_type                 := INIT_ST;
-   signal   continuous_mode : std_logic;
+   type   state_type is (INIT_ST, IDLE_ST, PRINTING_ST, PRINT_BOTTOM_ST, WAIT_DISK_ST);
+   signal state           : state_type                 := INIT_ST;
+   signal continuous_mode : std_logic;
 
-   signal   cur_col         : natural range 0 to G_COLS + 1;
-   signal   cur_row         : natural range 0 to G_ROWS;
-   signal   wait_for_ram    : std_logic;
-   signal   board_rd_data_d : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
+   signal cur_col         : natural range 0 to G_COLS + 1;
+   signal cur_row         : natural range 0 to G_ROWS;
+   signal wait_for_ram    : std_logic;
+   signal board_rd_data_d : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
 
-   signal   rand_output               : std_logic_vector(127 downto 0);
-   signal   rand7                     : std_logic_vector(6 downto 0);
-   signal   random_bit                : std_logic;
-   signal   init_rand7_cutoff         : std_logic_vector(6 downto 0);
-   signal   init_border_cutoff_prelim : natural range 0 to G_COLS * 64;
-   signal   init_border_cutoff        : natural range 0 to G_COLS / 2;
+   signal rand_output               : std_logic_vector(127 downto 0);
+   signal rand7                     : std_logic_vector(6 downto 0);
+   signal random_bit                : std_logic;
+   signal init_rand7_cutoff         : std_logic_vector(6 downto 0);
+   signal init_border_cutoff_prelim : natural range 0 to G_COLS * 64;
+   signal init_border_cutoff        : natural range 0 to G_COLS / 2;
 
-   signal   step_counter : std_logic_vector(31 downto 0) := (others => '0');
-   signal   step         : std_logic;
+   signal step_counter : std_logic_vector(31 downto 0) := (others => '0');
+   signal step         : std_logic;
 
    pure function to_stdlogic (
       arg : boolean
@@ -115,6 +118,8 @@ begin
    begin
       if rising_edge(clk_i) then
          board_wr_en_o <= '0';
+         load_o        <= '0';
+         save_o        <= '0';
 
          if ready_i = '1' then
             step_o <= '0';
@@ -226,6 +231,14 @@ begin
                      when ' ' =>
                         continuous_mode <= '0';
 
+                     when 'W' =>
+                        save_o <= '1';
+                        state  <= WAIT_DISK_ST;
+
+                     when 'O' =>
+                        load_o <= '1';
+                        state  <= WAIT_DISK_ST;
+
                      when others =>
                         null;
 
@@ -284,6 +297,11 @@ begin
                      state          <= IDLE_ST;
                   end if;
                   uart_tx_valid_o <= '1';
+               end if;
+
+            when WAIT_DISK_ST =>
+               if ack_i = '1' then
+                  state <= IDLE_ST;
                end if;
 
          end case;

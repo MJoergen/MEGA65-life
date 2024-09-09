@@ -230,25 +230,25 @@ architecture synthesis of mega65_core is
    constant C_VIDEO_MODE : video_modes_t      := C_HDMI_720p_60;
 
    -- OSM selections within qnice_osm_control_i
-   constant C_MENU_INIT_DENSITY_30 : natural  := 5;
-   constant C_MENU_INIT_DENSITY_25 : natural  := 6;
-   constant C_MENU_INIT_DENSITY_20 : natural  := 7;
-   constant C_MENU_INIT_DENSITY_15 : natural  := 8;
-   constant C_MENU_INIT_DENSITY_10 : natural  := 9;
+   constant C_MENU_INIT_DENSITY_30 : natural  := 7;
+   constant C_MENU_INIT_DENSITY_25 : natural  := 8;
+   constant C_MENU_INIT_DENSITY_20 : natural  := 9;
+   constant C_MENU_INIT_DENSITY_15 : natural  := 10;
+   constant C_MENU_INIT_DENSITY_10 : natural  := 11;
 
-   constant C_MENU_INIT_BORDER_20 : natural   := 16;
-   constant C_MENU_INIT_BORDER_15 : natural   := 17;
-   constant C_MENU_INIT_BORDER_10 : natural   := 18;
-   constant C_MENU_INIT_BORDER_5  : natural   := 19;
-   constant C_MENU_INIT_BORDER_0  : natural   := 20;
+   constant C_MENU_INIT_BORDER_20 : natural   := 18;
+   constant C_MENU_INIT_BORDER_15 : natural   := 19;
+   constant C_MENU_INIT_BORDER_10 : natural   := 20;
+   constant C_MENU_INIT_BORDER_5  : natural   := 21;
+   constant C_MENU_INIT_BORDER_0  : natural   := 22;
 
-   constant C_MENU_GEN_SPEED_FASTER : natural := 27;
-   constant C_MENU_GEN_SPEED_FAST   : natural := 28;
-   constant C_MENU_GEN_SPEED_MEDIUM : natural := 29;
-   constant C_MENU_GEN_SPEED_SLOW   : natural := 30;
-   constant C_MENU_GEN_SPEED_SLOWER : natural := 31;
+   constant C_MENU_GEN_SPEED_FASTER : natural := 29;
+   constant C_MENU_GEN_SPEED_FAST   : natural := 30;
+   constant C_MENU_GEN_SPEED_MEDIUM : natural := 31;
+   constant C_MENU_GEN_SPEED_SLOW   : natural := 32;
+   constant C_MENU_GEN_SPEED_SLOWER : natural := 33;
 
-   constant C_MENU_AUTO_STOP : natural        := 35;
+   constant C_MENU_AUTO_STOP : natural        := 37;
 
    signal   main_life_ready         : std_logic;
    signal   main_life_step          : std_logic;
@@ -279,6 +279,12 @@ architecture synthesis of mega65_core is
    signal   video_start_col : std_logic_vector(15 downto 0);
    signal   video_mem_addr  : std_logic_vector(9 downto 0);
    signal   video_mem_data  : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
+
+   signal   qnice_vdrv_qnice_ce           : std_logic;
+   signal   qnice_vdrv_qnice_we           : std_logic;
+   signal   qnice_vdrv_qnice_data         : std_logic_vector(15 downto 0);
+   signal   qnice_vdrv_mount_buf_ram_we   : std_logic;
+   signal   qnice_vdrv_mount_buf_ram_data : std_logic_vector(7 downto 0);
 
 begin
 
@@ -406,7 +412,14 @@ begin
          main_board_addr_o         => main_tdp_addr,
          main_board_rd_data_i      => main_tdp_rd_data,
          main_board_wr_data_o      => main_tdp_wr_data,
-         main_board_wr_en_o        => main_tdp_wr_en
+         main_board_wr_en_o        => main_tdp_wr_en,
+         qnice_clk_i               => qnice_clk_i,
+         qnice_rst_i               => qnice_rst_i,
+         qnice_addr_i              => qnice_dev_addr_i,
+         qnice_data_i              => qnice_dev_data_i,
+         qnice_data_o              => qnice_vdrv_qnice_data,
+         qnice_ce_i                => qnice_vdrv_qnice_ce,
+         qnice_we_i                => qnice_vdrv_qnice_we
       ); -- controller_wrapper_inst
 
 
@@ -492,6 +505,53 @@ begin
          video_vblank_o    => video_vblank_o
       ); -- video_wrapper_inst
 
+   core_specific_devices_proc : process (all)
+   begin
+      qnice_dev_data_o            <= X"EEEE";
+      qnice_dev_wait_o            <= '0';
+      qnice_vdrv_qnice_ce         <= '0';
+      qnice_vdrv_qnice_we         <= '0';
+      qnice_vdrv_mount_buf_ram_we <= '0';
+
+      case qnice_dev_id_i is
+
+         when C_DEV_VDRV_VDRIVES =>
+            qnice_vdrv_qnice_ce <= qnice_dev_ce_i;
+            qnice_vdrv_qnice_we <= qnice_dev_we_i;
+            qnice_dev_data_o    <= qnice_vdrv_qnice_data;
+
+         when C_DEV_VDRV_MOUNT =>
+            qnice_vdrv_mount_buf_ram_we <= qnice_dev_we_i;
+            qnice_dev_data_o            <= X"00" & qnice_vdrv_mount_buf_ram_data;
+
+         when others =>
+            null;
+
+      end case;
+
+   --
+   end process core_specific_devices_proc;
+
+   -- For now: Let's use a simple BRAM (using only 1 port will make a BRAM) for buffering
+   -- the disks that we are mounting. This will work for D64 only.
+   -- @TODO: Switch to HyperRAM at a later stage
+   mount_buf_ram_inst : entity work.dualport_2clk_ram
+      generic map (
+         ADDR_WIDTH   => 18,
+         DATA_WIDTH   => 8,
+         MAXIMUM_SIZE => 197376,        -- maximum size of any D64 image: non-standard 40-track incl. 768 error bytes
+         FALLING_A    => true
+      )
+      port map (
+         -- QNICE only
+         clock_a   => qnice_clk_i,
+         address_a => qnice_dev_addr_i(17 downto 0),
+         data_a    => qnice_dev_data_i(7 downto 0),
+         wren_a    => qnice_vdrv_mount_buf_ram_we,
+         q_a       => qnice_vdrv_mount_buf_ram_data
+      ); -- mount_buf_ram_inst
+
+
 
    ---------------------------------------------------------------------------------------------
    -- Default values
@@ -550,8 +610,6 @@ begin
    qnice_audio_filter_o    <= '0';       -- 0 = raw audio, 1 = use filters from globals.vhd
    qnice_audio_mute_o      <= '0';       -- audio is not muted
    qnice_csync_o           <= '0';
-   qnice_dev_data_o        <= x"EEEE";
-   qnice_dev_wait_o        <= '0';
    qnice_dvi_o             <= '1';       -- 0=HDMI (with sound), 1=DVI (no sound)
    qnice_flip_joyports_o   <= '0';
    qnice_osm_cfg_scaling_o <= (others => '1');

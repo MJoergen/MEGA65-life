@@ -21,6 +21,7 @@ package globals is
 
    constant BOARD_CLK_SPEED      : natural                       := 100_000_000;
    constant CORE_CLK_SPEED       : natural                       := 100_000_000;
+   constant QNICE_CLK_SPEED      : natural                       :=  50_000_000;
 
    constant VGA_DX               : natural                       := 1280;
    constant VGA_DY               : natural                       := 720;
@@ -34,14 +35,17 @@ package globals is
    constant CHAR_MEM_SIZE        : natural                       := CHARS_DX * CHARS_DY;
    constant VRAM_ADDR_WIDTH      : natural                       := f_log2(CHAR_MEM_SIZE);
 
+   constant C_DEV_VDRV_VDRIVES   : std_logic_vector(15 downto 0) := X"0100";
+   constant C_DEV_VDRV_MOUNT     : std_logic_vector(15 downto 0) := X"0101";
+
    -- Leave this setting true. Only if the core already outputs a modern high-resolution
    -- HDMI-compatible video stream should you consider setting this to false.
    constant ENABLE_ASCALER       : boolean                       := false;
 
    type     vd_buf_array is array (natural range <>) of std_logic_vector(15 downto 0);
    constant C_VDNUM              : natural                       := 1;
-   constant C_VD_DEVICE          : std_logic_vector(15 downto 0) := x"0110";
-   constant C_VD_BUFFER          : vd_buf_array                  := (x"0111", x"EEEE");
+   constant C_VD_DEVICE          : std_logic_vector(15 downto 0) := C_DEV_VDRV_VDRIVES;
+   constant C_VD_BUFFER          : vd_buf_array                  := (C_DEV_VDRV_MOUNT, x"EEEE");
 
    type     crtrom_buf_array is array (natural range<>) of std_logic_vector;
    constant ENDSTR               : character                     := character'val(0);

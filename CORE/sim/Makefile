@@ -1,11 +1,14 @@
+SRCS += ../../M2M/QNICE/vhdl/tools.vhd
+SRCS += ../vhdl/globals.vhd
+
 SRCS += ../../M2M/vhdl/av_pipeline/video_modes_pkg.vhd
 SRCS += ../../M2M/vhdl/uart.vhd
 SRCS += ../../M2M/vhdl/av_pipeline/vga_controller.vhd
 SRCS += ../../M2M/vhdl/tdp_ram.vhd
-SRCS += ../../M2M/QNICE/vhdl/tools.vhd
+SRCS += ../../M2M/vhdl/2port2clk_ram.vhd
+SRCS += ../../M2M/vhdl/vdrives.vhd
 
 SRCS += ../vhdl/clk.vhd
-SRCS += ../vhdl/globals.vhd
 SRCS += ../vhdl/life.vhd
 SRCS += ../vhdl/video/shift_registers.vhd
 SRCS += ../vhdl/controller/divmod.vhd
@@ -16,6 +19,7 @@ SRCS += ../vhdl/controller/lfsr.vhd
 SRCS += ../vhdl/controller/random.vhd
 SRCS += ../vhdl/controller/keyboard.vhd
 SRCS += ../vhdl/controller/controller.vhd
+SRCS += ../vhdl/controller/drives.vhd
 SRCS += ../vhdl/controller/controller_wrapper.vhd
 SRCS += ../vhdl/video/font.vhd
 SRCS += ../vhdl/video/vga_chars.vhd
@@ -31,8 +35,8 @@ SRCS += tb_bin2bcd.vhd
 
 TB = life
 TB = mega65_core
-TB = statistics
-TB = bin2bcd
+#TB = statistics
+#TB = bin2bcd
 
 GENERICS += -gG_CELL_BITS=4
 GENERICS += -gG_ROWS=8

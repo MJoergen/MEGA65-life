@@ -265,7 +265,7 @@ constant OPTM_S_SAVING     : string := "<Saving>";          -- the internal writ
 --             Do use a lower case \n. If you forget one of them or if you use upper case, you will run into undefined behavior.
 --          2. Start each line that contains an actual menu item (multi- or single-select) with a Space character,
 --             otherwise you will experience visual glitches.
-constant OPTM_SIZE         : natural := 40;  -- amount of items including empty lines:
+constant OPTM_SIZE         : natural := 42;  -- amount of items including empty lines:
                                              -- needs to be equal to the number of lines in OPTM_ITEMS and amount of items in OPTM_GROUPS
                                              -- IMPORTANT: If SAVE_SETTINGS is true and OPTM_SIZE changes: Make sure to re-generate and
                                              -- and re-distribute the config file. You can make a new one using M2M/tools/make_config.sh
@@ -273,11 +273,13 @@ constant OPTM_SIZE         : natural := 40;  -- amount of items including empty 
 -- Net size of the Options menu on the screen in characters (excluding the frame, which is hardcoded to two characters)
 -- Without submenus: Use OPTM_SIZE as height, otherwise count how large the actually visible main menu is.
 constant OPTM_DX           : natural := 20;
-constant OPTM_DY           : natural := 13;
+constant OPTM_DY           : natural := 15;
 
 constant OPTM_ITEMS        : string :=
 
    " Game of Life\n"       &
+   "\n"                    &
+   " Disk:%s\n"            &  -- %s will be replaced by OPTM_S_MOUNT when not mounted and by the filename when mounted
    "\n"                    &
 
    " Density: %s\n"        &
@@ -334,31 +336,34 @@ constant OPTM_G_BORDER     : integer := 3;
 constant OPTM_G_SPEED      : integer := 4;
 constant OPTM_G_AUTO_STOP  : integer := 5;
 constant OPTM_G_ABOUT_HELP : integer := 6;
+constant OPTM_G_MOUNT_DISK : integer := 7;
 
 constant OPTM_GROUPS       : OPTM_GTYPE := ( OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
+                                             OPTM_G_MOUNT_DISK    + OPTM_G_MOUNT_DRV   + OPTM_G_START,
+                                             OPTM_G_LINE,
 
-                                             OPTM_G_SUBMENU + OPTM_G_START,         -- Density submenu
+                                             OPTM_G_SUBMENU,                        -- Density submenu
                                              OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
                                              OPTM_G_DENSITY,                        -- 30
                                              OPTM_G_DENSITY,                        -- 25
-                                             OPTM_G_DENSITY       + OPTM_G_STDSEL,  -- 20
-                                             OPTM_G_DENSITY,                        -- 15
+                                             OPTM_G_DENSITY,                        -- 20
+                                             OPTM_G_DENSITY       + OPTM_G_STDSEL,  -- 15
                                              OPTM_G_DENSITY,                        -- 10
                                              OPTM_G_LINE,
                                              OPTM_G_CLOSE         + OPTM_G_SUBMENU,
 
                                              OPTM_G_LINE,
 
-                                             OPTM_G_SUBMENU + OPTM_G_START,         -- Border submenu
+                                             OPTM_G_SUBMENU,                        -- Border submenu
                                              OPTM_G_HEADLINE,
                                              OPTM_G_LINE,
                                              OPTM_G_BORDER,                         -- 20
                                              OPTM_G_BORDER,                         -- 15
-                                             OPTM_G_BORDER        + OPTM_G_STDSEL,  -- 10
+                                             OPTM_G_BORDER,                         -- 10
                                              OPTM_G_BORDER,                         --  5
-                                             OPTM_G_BORDER,                         --  0
+                                             OPTM_G_BORDER        + OPTM_G_STDSEL,  --  0
                                              OPTM_G_LINE,
                                              OPTM_G_CLOSE         + OPTM_G_SUBMENU,
 

@@ -224,6 +224,12 @@ signal cache_flush_st_r_qnice    : std_logic_vector(VDNUM - 1 downto 0);
 signal cache_flush_de_r_qnice    : vd_unsigned_array(VDNUM - 1 downto 0)(15 downto 0);
 signal cache_flush_de_cnt_qnice  : vd_unsigned_array(VDNUM - 1 downto 0)(31 downto 0);
 
+signal main2qnice_in  : std_logic_vector(VDNUM downto 0);
+signal main2qnice_out : std_logic_vector(VDNUM downto 0);
+
+signal qnice2main_in  : std_logic_vector(3 * VDNUM - 1 downto 0);
+signal qnice2main_out : std_logic_vector(3 * VDNUM - 1 downto 0);
+
 begin
    -- Core clock domain: Output registers
    img_mounted_o     <= img_mounted_out;
@@ -234,19 +240,18 @@ begin
    cache_dirty_o     <= cache_dirty_r_core;
    cache_flushing_o  <= cache_flushing_r_core;
 
+   qnice2main_in <= (cache_flushing_r_qnice, cache_dirty_r_qnice, img_mounted);
+   (cache_flushing_r_core, cache_dirty_r_core, img_mounted_out) <= qnice2main_out;
+
    i_cdc_q2m_img_mounted: xpm_cdc_array_single
       generic map (
          WIDTH => 3 * VDNUM
       )
       port map (
-         src_clk                                      => clk_qnice_i,
-         src_in((VDNUM * 1) - 1 downto (VDNUM * 0))   => img_mounted(VDNUM - 1 downto 0),
-         src_in((VDNUM * 2) - 1 downto (VDNUM * 1))   => cache_dirty_r_qnice(VDNUM - 1 downto 0),
-         src_in((VDNUM * 3) - 1 downto (VDNUM * 2))   => cache_flushing_r_qnice(VDNUM - 1 downto 0),
-         dest_clk                                     => clk_core_i,
-         dest_out((VDNUM * 1) - 1 downto (VDNUM * 0)) => img_mounted_out(VDNUM - 1 downto 0),
-         dest_out((VDNUM * 2) - 1 downto (VDNUM * 1)) => cache_dirty_r_core(VDNUM - 1 downto 0),
-         dest_out((VDNUM * 3) - 1 downto (VDNUM * 2)) => cache_flushing_r_core(VDNUM - 1 downto 0)
+         src_clk  => clk_qnice_i,
+         src_in   => qnice2main_in,
+         dest_clk => clk_core_i,
+         dest_out => qnice2main_out
       );
 
    i_cdc_qnice2main: xpm_cdc_array_single
@@ -270,17 +275,17 @@ begin
    sd_buff_wr_o      <= sd_buff_wr;
    sd_ack_o          <= sd_ack;
 
+   main2qnice_in <= (drive_mounted_reg, reset_core_i);
+   (drive_mounted_reg_qnice, reset_qnice) <= main2qnice_out;
    i_cdc_main2qnice: xpm_cdc_array_single
       generic map (
          WIDTH => 1 + VDNUM
       )
       port map (
-         src_clk                             => clk_core_i,
-         src_in(0)                           => reset_core_i,
-         src_in((1 + VDNUM - 1) downto 1)    => drive_mounted_reg,
-         dest_clk                            => clk_qnice_i,
-         dest_out(0)                         => reset_qnice,
-         dest_out((1 + VDNUM - 1) downto 1)  => drive_mounted_reg_qnice
+         src_clk  => clk_core_i,
+         src_in   => main2qnice_in,
+         dest_clk => clk_qnice_i,
+         dest_out => main2qnice_out
       );
 
    -- speed up the QNICE firmware by doing certain calculations in hardware instead of software
