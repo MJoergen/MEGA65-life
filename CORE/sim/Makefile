@@ -10,7 +10,6 @@ SRCS += ../../M2M/vhdl/vdrives.vhd
 
 SRCS += ../vhdl/clk.vhd
 SRCS += ../vhdl/life.vhd
-SRCS += ../vhdl/video/shift_registers.vhd
 SRCS += ../vhdl/controller/divmod.vhd
 SRCS += ../vhdl/controller/bin2bcd.vhd
 SRCS += ../vhdl/controller/count_ones.vhd
@@ -22,8 +21,7 @@ SRCS += ../vhdl/controller/controller.vhd
 SRCS += ../vhdl/controller/drives.vhd
 SRCS += ../vhdl/controller/controller_wrapper.vhd
 SRCS += ../vhdl/video/font.vhd
-SRCS += ../vhdl/video/vga_chars.vhd
-SRCS += ../vhdl/video/video_text_mode.vhd
+SRCS += ../vhdl/video/video_stats.vhd
 SRCS += ../vhdl/video/video_board.vhd
 SRCS += ../vhdl/video/video_wrapper.vhd
 SRCS += ../vhdl/mega65_core.vhd
