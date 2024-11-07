@@ -44,6 +44,6 @@ GENERICS += -gG_BOARD=R6
 all:
 	vlog glbl.v
 	vcom -2008 $(SRCS)
-	vsim -voptargs=+acc $(GENERICS) -do wave_$(TB).do tb_$(TB) glbl -c
+	vsim -t ps -voptargs=+acc $(GENERICS) -do wave_$(TB).do tb_$(TB) glbl -c
 
 

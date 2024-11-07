@@ -25,9 +25,11 @@ architecture simulation of tb_mega65_core is
 
    constant C_UART_BAUDRATE : natural := 20_000_000;
 
-   signal   sys_clk : std_logic       := '1';
-   signal   sys_rst : std_logic       := '1';
-   signal   running : std_logic       := '1';
+   signal   sys_clk   : std_logic       := '1';
+   signal   sys_rst   : std_logic       := '1';
+   signal   qnice_clk : std_logic       := '1';
+   signal   qnice_rst : std_logic       := '1';
+   signal   running   : std_logic       := '1';
 
    signal   main_clk : std_logic;
    signal   main_rst : std_logic;
@@ -44,8 +46,11 @@ architecture simulation of tb_mega65_core is
 
 begin
 
-   sys_clk <= not sys_clk after 5 ns; -- 100 MHz
+   sys_clk <= running and not sys_clk after 5 ns; -- 100 MHz
    sys_rst <= '1', '0' after 100 ns;
+
+   qnice_clk <= running and not qnice_clk after 10 ns; -- 50 MHz
+   qnice_rst <= '1', '0' after 100 ns;
 
    test_proc : process
       --
@@ -115,8 +120,8 @@ begin
          G_BOARD         => G_BOARD
       )
       port map (
-         qnice_clk_i              => '0',
-         qnice_rst_i              => '1',
+         qnice_clk_i              => qnice_clk,
+         qnice_rst_i              => qnice_rst,
          qnice_dvi_o              => open,
          qnice_video_mode_o       => open,
          qnice_osm_cfg_scaling_o  => open,

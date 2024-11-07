@@ -83,8 +83,7 @@ begin
          col : integer range 0 to G_COLS - 1;
          row : integer range 0 to G_ROWS - 1;
          val : integer range 0 to 2 ** G_CELL_BITS - 1
-      )
-         is
+      ) is
       begin
          tb_wr_row   <= row;
          tb_wr_col   <= col;
@@ -94,8 +93,7 @@ begin
          tb_wr_en    <= '0';
       end procedure write_cell;
 
-      procedure
-         print_board (
+      procedure print_board (
          arg : board_type
       ) is
       begin
