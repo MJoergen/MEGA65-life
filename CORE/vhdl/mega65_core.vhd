@@ -283,8 +283,6 @@ architecture synthesis of mega65_core is
    signal   qnice_vdrv_qnice_ce           : std_logic;
    signal   qnice_vdrv_qnice_we           : std_logic;
    signal   qnice_vdrv_qnice_data         : std_logic_vector(15 downto 0);
-   signal   qnice_vdrv_mount_buf_ram_we   : std_logic;
-   signal   qnice_vdrv_mount_buf_ram_data : std_logic_vector(7 downto 0);
 
 begin
 
@@ -511,7 +509,6 @@ begin
       qnice_dev_wait_o            <= '0';
       qnice_vdrv_qnice_ce         <= '0';
       qnice_vdrv_qnice_we         <= '0';
-      qnice_vdrv_mount_buf_ram_we <= '0';
 
       case qnice_dev_id_i is
 
@@ -521,8 +518,16 @@ begin
             qnice_dev_data_o    <= qnice_vdrv_qnice_data;
 
          when C_DEV_VDRV_MOUNT =>
-            qnice_vdrv_mount_buf_ram_we <= qnice_dev_we_i;
-            qnice_dev_data_o            <= X"00" & qnice_vdrv_mount_buf_ram_data;
+            qnice_dev_wait_o      <= ((not qnice_dev_we_i) and (not mem_core_readdatavalid_i))
+                                     or mem_core_waitrequest_i;
+            qnice_dev_data_o      <= mem_core_readdata_i;
+
+            mem_core_address_o    <= "0000" & qnice_dev_addr_i;
+            mem_core_burstcount_o <= X"01";
+            mem_core_byteenable_o <= "11";
+            mem_core_read_o       <= not qnice_dev_we_i;
+            mem_core_writedata_o  <= qnice_dev_data_i;
+            mem_core_write_o      <= qnice_dev_we_i;
 
          when others =>
             null;
@@ -531,25 +536,6 @@ begin
 
    --
    end process core_specific_devices_proc;
-
-   -- For now: Let's use a simple BRAM (using only 1 port will make a BRAM) for buffering
-   -- the disks that we are mounting. This will work for D64 only.
-   -- @TODO: Switch to HyperRAM at a later stage
-   mount_buf_ram_inst : entity work.dualport_2clk_ram
-      generic map (
-         ADDR_WIDTH   => 18,
-         DATA_WIDTH   => 8,
-         MAXIMUM_SIZE => 197376,        -- maximum size of any D64 image: non-standard 40-track incl. 768 error bytes
-         FALLING_A    => true
-      )
-      port map (
-         -- QNICE only
-         clock_a   => qnice_clk_i,
-         address_a => qnice_dev_addr_i(17 downto 0),
-         data_a    => qnice_dev_data_i(7 downto 0),
-         wren_a    => qnice_vdrv_mount_buf_ram_we,
-         q_a       => qnice_vdrv_mount_buf_ram_data
-      ); -- mount_buf_ram_inst
 
 
 
@@ -583,12 +569,6 @@ begin
    cart_roml_o             <= '0';
    cart_roml_oe_o          <= '0';
    cart_rw_o               <= '0';
-   mem_core_address_o      <= (others => '0');
-   mem_core_burstcount_o   <= (others => '0');
-   mem_core_byteenable_o   <= (others => '0');
-   mem_core_read_o         <= '0';
-   mem_core_writedata_o    <= (others => '0');
-   mem_core_write_o        <= '0';
    main_drive_led_col_o    <= x"00FF00"; -- 24-bit RGB value for the led
    main_drive_led_o        <= '0';
    main_joy_1_down_n_o     <= '1';
