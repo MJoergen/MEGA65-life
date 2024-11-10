@@ -156,6 +156,7 @@ begin
 
    video_addr_o <= to_stdlogicvector(video_board_y_1, 10);
 
+   -- Stage 2
    stage2_proc : process (video_clk_i)
    begin
       if rising_edge(video_clk_i) then
@@ -171,7 +172,6 @@ begin
       end if;
    end process stage2_proc;
 
-   -- Stage 2
    cell_2       <= video_data_i(video_board_x_2 * G_CELL_BITS + G_CELL_BITS - 1 downto video_board_x_2 * G_CELL_BITS);
 
    -- Stage 3
