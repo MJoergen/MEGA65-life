@@ -280,9 +280,19 @@ architecture synthesis of mega65_core is
    signal   video_mem_addr  : std_logic_vector(9 downto 0);
    signal   video_mem_data  : std_logic_vector(G_CELL_BITS * G_COLS - 1 downto 0);
 
-   signal   qnice_vdrv_qnice_ce           : std_logic;
-   signal   qnice_vdrv_qnice_we           : std_logic;
-   signal   qnice_vdrv_qnice_data         : std_logic_vector(15 downto 0);
+   signal   qnice_vdrv_qnice_ce   : std_logic;
+   signal   qnice_vdrv_qnice_we   : std_logic;
+   signal   qnice_vdrv_qnice_data : std_logic_vector(15 downto 0);
+
+   signal   qnice_mem_write         : std_logic;
+   signal   qnice_mem_read          : std_logic;
+   signal   qnice_mem_address       : std_logic_vector(31 downto 0);
+   signal   qnice_mem_writedata     : std_logic_vector(15 downto 0);
+   signal   qnice_mem_byteenable    : std_logic_vector( 1 downto 0);
+   signal   qnice_mem_burstcount    : std_logic_vector( 7 downto 0);
+   signal   qnice_mem_readdata      : std_logic_vector(15 downto 0);
+   signal   qnice_mem_readdatavalid : std_logic;
+   signal   qnice_mem_waitrequest   : std_logic;
 
 begin
 
@@ -505,10 +515,10 @@ begin
 
    core_specific_devices_proc : process (all)
    begin
-      qnice_dev_data_o            <= X"EEEE";
-      qnice_dev_wait_o            <= '0';
-      qnice_vdrv_qnice_ce         <= '0';
-      qnice_vdrv_qnice_we         <= '0';
+      qnice_dev_data_o    <= X"EEEE";
+      qnice_dev_wait_o    <= '0';
+      qnice_vdrv_qnice_ce <= '0';
+      qnice_vdrv_qnice_we <= '0';
 
       case qnice_dev_id_i is
 
@@ -518,16 +528,17 @@ begin
             qnice_dev_data_o    <= qnice_vdrv_qnice_data;
 
          when C_DEV_VDRV_MOUNT =>
-            qnice_dev_wait_o      <= ((not qnice_dev_we_i) and (not mem_core_readdatavalid_i))
-                                     or mem_core_waitrequest_i;
-            qnice_dev_data_o      <= mem_core_readdata_i;
+            qnice_dev_wait_o     <= qnice_dev_ce_i and
+                                    ( ((not qnice_dev_we_i) and (not qnice_mem_readdatavalid))
+                                      or qnice_mem_waitrequest);
+            qnice_dev_data_o     <= qnice_mem_readdata;
 
-            mem_core_address_o    <= "0000" & qnice_dev_addr_i;
-            mem_core_burstcount_o <= X"01";
-            mem_core_byteenable_o <= "11";
-            mem_core_read_o       <= not qnice_dev_we_i;
-            mem_core_writedata_o  <= qnice_dev_data_i;
-            mem_core_write_o      <= qnice_dev_we_i;
+            qnice_mem_address    <= "0000" & qnice_dev_addr_i;
+            qnice_mem_burstcount <= X"01";
+            qnice_mem_byteenable <= "11";
+            qnice_mem_read       <= qnice_dev_ce_i and not qnice_dev_we_i;
+            qnice_mem_writedata  <= qnice_dev_data_i;
+            qnice_mem_write      <= qnice_dev_ce_i and qnice_dev_we_i;
 
          when others =>
             null;
@@ -537,6 +548,40 @@ begin
    --
    end process core_specific_devices_proc;
 
+
+   -- Clock domain crossing: QNICE to MEM
+   avm_fifo_qnice_inst : entity work.avm_fifo
+      generic map (
+         G_WR_DEPTH     => 16,
+         G_RD_DEPTH     => 16,
+         G_FILL_SIZE    => 1,
+         G_ADDRESS_SIZE => 32,
+         G_DATA_SIZE    => 16
+      )
+      port map (
+         s_clk_i               => qnice_clk_i,
+         s_rst_i               => qnice_rst_i,
+         s_avm_waitrequest_o   => qnice_mem_waitrequest,
+         s_avm_write_i         => qnice_mem_write,
+         s_avm_read_i          => qnice_mem_read,
+         s_avm_address_i       => qnice_mem_address,
+         s_avm_writedata_i     => qnice_mem_writedata,
+         s_avm_byteenable_i    => qnice_mem_byteenable,
+         s_avm_burstcount_i    => qnice_mem_burstcount,
+         s_avm_readdata_o      => qnice_mem_readdata,
+         s_avm_readdatavalid_o => qnice_mem_readdatavalid,
+         m_clk_i               => mem_clk_i,
+         m_rst_i               => mem_rst_i,
+         m_avm_waitrequest_i   => mem_core_waitrequest_i,
+         m_avm_write_o         => mem_core_write_o,
+         m_avm_read_o          => mem_core_read_o,
+         m_avm_address_o       => mem_core_address_o,
+         m_avm_writedata_o     => mem_core_writedata_o,
+         m_avm_byteenable_o    => mem_core_byteenable_o,
+         m_avm_burstcount_o    => mem_core_burstcount_o,
+         m_avm_readdata_i      => mem_core_readdata_i,
+         m_avm_readdatavalid_i => mem_core_readdatavalid_i
+      ); -- avm_fifo_qnice_inst
 
 
    ---------------------------------------------------------------------------------------------
